@@ -17,6 +17,7 @@ class FloorManager:
         self.unit_map = self.floor.generate_empty_map(-1)
         self.item_map = self.floor.generate_empty_map(-1)
         self.trap_map = self.floor.generate_empty_map(-1)
+        self.visibility_map = self.floor.generate_empty_map(0)
         self.turn_order = []
         self.moving_units = []
         self.attacked_units = []
@@ -48,6 +49,9 @@ class FloorManager:
     def get_trap_map(self, cor):
         return self.floor.get_map_value(self.trap_map, cor)
     
+    def get_visibility_map(self, cor):
+        return self.floor.get_map_value(self.visibility_map, cor)
+    
     def get_current_turn(self):
         return self.turn_order[self.current_turn]
     
@@ -66,6 +70,9 @@ class FloorManager:
 
     def set_trap_map(self, cor, value):
         return self.floor.set_map_value(self.trap_map, cor, value)
+    
+    def set_visibility_map(self, cor, value):
+        return self.floor.set_map_value(self.visibility_map, cor, value)
 
     def isplayerturn(self):
         return False if len(self.turn_order) < 1 else self.get_current_turn() == self.player_id
@@ -121,6 +128,21 @@ class FloorManager:
         unit.hit(damage)
         self.attacked_units.append(unit_id)
     
+    def check_visibility(self, unit):
+            visibility_radius = 1
+
+            if self.floor.isroom(unit.cor) and self.get_visibility_map(unit.cor) <= 0:
+                room = self.floor.get_room(self.floor.get_room_map(unit.cor))
+                self.make_visible([room.cor[0]-1, room.cor[1]-1], room.width+2, room.height+2)
+
+            self.make_visible((unit.cor[0]-visibility_radius, unit.cor[1]-visibility_radius), (visibility_radius*2)+1, (visibility_radius*2)+1)
+
+    def make_visible(self, start_cor, width, height):
+        for i in range(width):
+            for j in range(height):
+                visible_cor = [start_cor[0]+i, start_cor[1]+j]
+                self.set_visibility_map(visible_cor, 1)
+
     def log_message(self, message):
         if message != '':
             self.text_log.add(message)
@@ -149,6 +171,7 @@ class FloorManager:
         self.unit_map = self.floor.generate_empty_map(-1)
         self.item_map = self.floor.generate_empty_map(-1)
         self.trap_map = self.floor.generate_empty_map(-1)
+        self.visibility_map = self.floor.generate_empty_map(0)
         self.turn_order = []
         self.moving_units = []
         self.attacked_units = []
@@ -191,6 +214,7 @@ class FloorManager:
         self.player_id = self.next_object_id
         self.place_unit(self.next_object_id)
         self.turn_order.append(self.next_object_id)
+        self.check_visibility(player)
         self.next_object_id += 1
         return self.next_object_id - 1
 
@@ -532,10 +556,11 @@ class FloorManager:
                 if prev_state == 'move':
                     self.moving_units.remove(unit_id)
                     if unit_id == self.player_id:
-                        player_cor = self.get_player().cor
-                        self.pickup_item(player_cor)
+                        player = self.get_player()
+                        self.check_visibility(player)
+                        self.pickup_item(player.cor)
                         self.trigger_trap(unit_id)
-                        if player_cor == self.stairs_cor:
+                        if player.cor == self.stairs_cor:
                             self.open_menu(_m.Menu((2, 40), ['Proceed','Cancel']))
 
             if self.get_player() is not None and unit_id == self.get_current_turn() and unit.state == 'idle' and not self.thrown_items:

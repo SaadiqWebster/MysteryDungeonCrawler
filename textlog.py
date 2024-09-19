@@ -18,7 +18,7 @@ class TextLog():
         self.logs = []
     
     def draw(self):
-        surf_width = 190
+        surf_width = 170
         surf_height = (self.font.get_linesize() * self.line_count) + 6
         surf = pygame.Surface((surf_width, surf_height))
         surf.fill(self.textbox_color)

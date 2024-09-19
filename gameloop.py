@@ -60,8 +60,6 @@ class GameLoop:
         else:
             scaled_camera_size[1] = window.get_height()
         window.blit(pygame.transform.scale(camera.draw(), scaled_camera_size), ((window.get_width() / 2) - (scaled_camera_size[0] / 2), (window.get_height() / 2) - (scaled_camera_size[1] / 2)))
-        # --- for some reason pygame.transform.scale lowers the performance when the screen is larger. use the below line if perfrormance is too jarring ----
-        #window.blit(camera.draw(), ((window.get_width() / 2) - (scaled_camera_size[0] / 2), (window.get_height() / 2) - (scaled_camera_size[1] / 2)))
         pygame.display.update()
         clock.tick(FPS)
         print(clock.get_fps())
@@ -72,7 +70,8 @@ class MainLoop(GameLoop):
 
         self.DEBUG = {
             'zoom_in': True,
-            'visible_traps': False
+            'visible_traps': False,
+            'visible_minimap': True
         }
         camera.toggle_zoom(self.DEBUG['zoom_in'])
         
@@ -89,6 +88,8 @@ class MainLoop(GameLoop):
         }
         self.flrmgr.set_floor_properties(floor_properties)
         self.flrmgr.generate_new_floor()
+        if self.DEBUG['visible_minimap']:
+            self.flrmgr.visibility_map = self.flrmgr.floor.generate_empty_map(1)
         #self.flrmgr.floor.print_map(flrmgr.floor.room_map)
 
     def read_events(self):
@@ -96,6 +97,8 @@ class MainLoop(GameLoop):
         
         if input.iskeypressed('tab') or input.isbuttonpressed(6):
             self.flrmgr.generate_new_floor()
+            if self.DEBUG['visible_minimap']:
+                self.flrmgr.visibility_map = self.flrmgr.floor.generate_empty_map(1)
         
         if input.iskeypressed('left shift') or input.isbuttonpressed(15):
             self.DEBUG['zoom_in'] = not self.DEBUG['zoom_in']
