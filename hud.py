@@ -34,7 +34,7 @@ class Hud:
 
         if self.minimap_visibility:
             minimap_surf = self.minimap.draw()
-            screen_surf.blit(minimap_surf, (-4, self.screen_size[1] - minimap_surf.get_height() + 4))
+            screen_surf.blit(minimap_surf, (-2, self.screen_size[1] - minimap_surf.get_height() - 2))
 
         if self.text_log_visibility:
             text_log_surf = self.floormanager.text_log.draw()

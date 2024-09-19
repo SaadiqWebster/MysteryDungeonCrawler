@@ -71,7 +71,7 @@ class MainLoop(GameLoop):
         self.DEBUG = {
             'zoom_in': True,
             'visible_traps': False,
-            'visible_minimap': True
+            'visible_minimap': False
         }
         camera.toggle_zoom(self.DEBUG['zoom_in'])
         

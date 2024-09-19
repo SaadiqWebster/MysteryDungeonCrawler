@@ -128,20 +128,35 @@ class FloorManager:
         unit.hit(damage)
         self.attacked_units.append(unit_id)
     
-    def check_visibility(self, unit):
+    def check_visibility(self, cor):
             visibility_radius = 1
 
-            if self.floor.isroom(unit.cor) and self.get_visibility_map(unit.cor) <= 0:
-                room = self.floor.get_room(self.floor.get_room_map(unit.cor))
+            if self.floor.isroom(cor):
+                room = self.floor.get_room(self.floor.get_room_map(cor))
                 self.make_visible([room.cor[0]-1, room.cor[1]-1], room.width+2, room.height+2)
-
-            self.make_visible((unit.cor[0]-visibility_radius, unit.cor[1]-visibility_radius), (visibility_radius*2)+1, (visibility_radius*2)+1)
+            else:
+                self.make_visible((cor[0]-visibility_radius, cor[1]-visibility_radius), (visibility_radius*2)+1, (visibility_radius*2)+1)
 
     def make_visible(self, start_cor, width, height):
         for i in range(width):
             for j in range(height):
                 visible_cor = [start_cor[0]+i, start_cor[1]+j]
                 self.set_visibility_map(visible_cor, 1)
+
+    # def make_visible(self, cor):
+    #     dir_x = [0,0,-1,1]
+    #     dir_y = [-1,1,0,0]
+    #     neighbors = []
+
+    #     self.set_visibility_map(cor, 1)
+
+    #     for i in range(len(dir_x)):
+    #         neighbor_cor = [cor[0]+dir_x[i], cor[1]+dir_y[i]]
+    #         if self.floor.isroom(neighbor_cor) and self.get_visibility_map(neighbor_cor) <= 0:
+    #             neighbors.append(neighbor_cor)
+
+    #     for neighbor_cor in neighbors:
+    #         self.make_visible(neighbor_cor)
 
     def log_message(self, message):
         if message != '':
@@ -214,7 +229,7 @@ class FloorManager:
         self.player_id = self.next_object_id
         self.place_unit(self.next_object_id)
         self.turn_order.append(self.next_object_id)
-        self.check_visibility(player)
+        self.check_visibility(spawn_cor)
         self.next_object_id += 1
         return self.next_object_id - 1
 
@@ -403,6 +418,7 @@ class FloorManager:
                     player.move(next_cor)
                     self.place_unit(self.player_id)
                     self.moving_units.append(self.player_id)
+                    self.check_visibility(next_cor)
                     self.change_turn()
     
     def select_menu_option(self): 
@@ -557,7 +573,6 @@ class FloorManager:
                     self.moving_units.remove(unit_id)
                     if unit_id == self.player_id:
                         player = self.get_player()
-                        self.check_visibility(player)
                         self.pickup_item(player.cor)
                         self.trigger_trap(unit_id)
                         if player.cor == self.stairs_cor:
