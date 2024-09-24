@@ -7,6 +7,7 @@ class Camera():
         self.camera_pos = [0,0]
         self.fill_color = (100,100,100) #(100,100,100)
         self.compass = 0 # in radians
+        self.turn_speed = 0.05
         
         # DEBUG
         self.tile_size = 3 # when units are a fixed size, this will no longer be needed
@@ -25,6 +26,12 @@ class Camera():
 
     def toggle_zoom(self, ZOOM_IN):
         self.tile_size = 20 if ZOOM_IN else 3
+
+    def turn_clockwise(self):
+        self.compass = float((self.compass + self.turn_speed) % (2 * math.pi))
+
+    def turn_counterclockwise(self):
+        self.compass = float((self.compass - self.turn_speed) % (2 * math.pi))
 
     # angle must be in radians
     def rotate_vector(self, vector, angle):
