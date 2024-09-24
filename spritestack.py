@@ -1,14 +1,17 @@
 import pygame, math
 
 DEBUG = {
-    'transparency': False,
+    'transparency': True,
     'show rotated_cor': True,
     'show draw_cor': True
 }
 
-class SpriteStack:
+class SpriteStack(pygame.sprite.Sprite):
     def __init__(self, spawn_cor, model_strip, dimensions, draw_offset=0, rotation_offset=0): # rotation in degrees
+        pygame.sprite.Sprite.__init__(self)
         self.cor = spawn_cor
+        self.image = pygame.Surface((0,0))
+        self.rect = self.image.get_rect()
         self.layers = []
         self.layer_width = dimensions[0]
         self.layer_height = dimensions[1]
@@ -49,23 +52,27 @@ class SpriteStack:
 
             self.render_cache[angle] = render_surf
 
-    def draw(self, camera):
-        current_cor = self.cor.copy()
+    def update_model(self, camera):
         angle = -math.degrees(camera.compass) // self.rotation_angle + self.rotation_offset
         angle = int(angle % self.total_angles)
-        model = self.render_cache[angle]
+        self.image = self.render_cache[angle]
+
+        current_cor = self.cor.copy()
         current_cor[0] -= camera.camera_pos[0]
         current_cor[1] -= camera.camera_pos[1]
-
         rotated_cor = camera.rotate_vector(current_cor, camera.compass)
+
         draw_cor = [0,0]
-        draw_cor[0] = rotated_cor[0] - model.get_width() // 2
-        draw_cor[1] = rotated_cor[1] - model.get_height() // 2
+        draw_cor[0] = rotated_cor[0] - self.image.get_width() // 2
+        draw_cor[1] = rotated_cor[1] - self.image.get_height() // 2
         draw_cor[1] -= self.draw_offset
 
-        camera.draw_to_screen(model, draw_cor)
-        if DEBUG['show rotated_cor']:
-            pygame.draw.circle(camera.surf, (0,0,255), rotated_cor, 1)
-        if DEBUG['show draw_cor']:
-            pygame.draw.circle(camera.surf, (0,255,0), draw_cor, 1)
+        self.rect = self.image.get_rect()
+        self.rect.x = draw_cor[0]
+        self.rect.y = draw_cor[1]
+
+        # if DEBUG['show rotated_cor']:
+        #     pygame.draw.circle(camera.surf, (0,0,255), rotated_cor, 1)
+        # if DEBUG['show draw_cor']:
+        #     pygame.draw.circle(camera.surf, (0,255,0), draw_cor, 1)
 

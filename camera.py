@@ -5,7 +5,7 @@ class Camera():
         self.camera_size = CAMERA_SIZE
         self.surf = pygame.Surface(self.camera_size)
         self.camera_pos = [0,0]
-        self.fill_color = (0,0,0) #(100,100,100)
+        self.fill_color = (100,100,100) #(100,100,100)
         self.compass = 0 # in radians
         
         # DEBUG

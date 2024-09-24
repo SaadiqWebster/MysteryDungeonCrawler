@@ -141,7 +141,8 @@ class FloorManager:
         for i in range(width):
             for j in range(height):
                 visible_cor = [start_cor[0]+i, start_cor[1]+j]
-                self.set_visibility_map(visible_cor, 1)
+                if visible_cor[0] >= 0 and visible_cor[1] >= 0 and visible_cor[0] < self.floor.floor_width and visible_cor[1] < self.floor.floor_height:
+                    self.set_visibility_map(visible_cor, 1)
 
     # def make_visible(self, cor):
     #     dir_x = [0,0,-1,1]

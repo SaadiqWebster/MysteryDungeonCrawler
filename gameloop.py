@@ -62,13 +62,13 @@ class GameLoop:
         window.blit(pygame.transform.scale(camera.draw(), scaled_camera_size), ((window.get_width() / 2) - (scaled_camera_size[0] / 2), (window.get_height() / 2) - (scaled_camera_size[1] / 2)))
         pygame.display.update()
         clock.tick(FPS)
-        print(clock.get_fps())
 
 class MainLoop(GameLoop):
     def __init__(self):
         super().__init__()
 
         self.DEBUG = {
+            'framerate': False,
             'zoom_in': True,
             'visible_traps': False,
             'visible_minimap': False
@@ -173,19 +173,43 @@ class MainLoop(GameLoop):
         for menu in self.flrmgr.active_menus:
             camera.draw_to_screen(menu.draw(), menu.draw_cor)
 
+    def end(self):
+        super().end()
+        if self.DEBUG['framerate']:
+            print(clock.get_fps())
+
 class SpriteStackLoop(GameLoop):
     def __init__(self):
         super().__init__()
         self.movement_speed = 1
         self.velocity = [0,0]
+        
         deer_model_strip = pygame.image.load('models/deer.png')
         knight_model_strip = pygame.image.load('models/chr_knight.png')
-        spawn_cor = camera.get_center_position()
-        spawn_cor[1] -= 50
+
+        camera_center = camera.get_center_position()
+        spawn_cor = [camera_center[0], camera_center[1]-50]
         self.deer1 = _ss.SpriteStack(spawn_cor, deer_model_strip, (16, 9), 13)
-        spawn_cor = camera.get_center_position()
-        spawn_cor[1] += 50
-        self.deer2 = _ss.SpriteStack(spawn_cor, knight_model_strip, (20, 21), 13)
+        spawn_cor = [camera_center[0]-10, camera_center[1]-60]
+        self.deer2 = _ss.SpriteStack(spawn_cor, deer_model_strip, (16, 9), 13)
+        spawn_cor = [camera_center[0]+10, camera_center[1]-60]
+        self.deer3 = _ss.SpriteStack(spawn_cor, deer_model_strip, (16, 9), 13)
+        
+        camera_center = camera.get_center_position()
+        spawn_cor = [camera_center[0], camera_center[1]+50]
+        self.knight1 = _ss.SpriteStack(spawn_cor, knight_model_strip, (20, 21), 13)
+        spawn_cor = [camera_center[0]-10, camera_center[1]+60]
+        self.knight2 = _ss.SpriteStack(spawn_cor, knight_model_strip, (20, 21), 13)
+        spawn_cor = [camera_center[0]+10, camera_center[1]+60]
+        self.knight3 = _ss.SpriteStack(spawn_cor, knight_model_strip, (20, 21), 13)
+
+        self.sprite_group = pygame.sprite.LayeredUpdates()
+        self.sprite_group.add(self.deer1)
+        self.sprite_group.add(self.deer2)
+        self.sprite_group.add(self.deer3)
+        self.sprite_group.add(self.knight1)
+        self.sprite_group.add(self.knight2)
+        self.sprite_group.add(self.knight3)
 
     def start(self):
         super().start()
@@ -223,10 +247,13 @@ class SpriteStackLoop(GameLoop):
         camera.camera_pos[0] += rotated_velocity[0]
         camera.camera_pos[1] += rotated_velocity[1]
 
+        for sprite in self.sprite_group.sprites():
+            sprite.update_model(camera)
+            self.sprite_group.change_layer(sprite, sprite.rect.y)
+
     def draw(self):
         pygame.draw.circle(camera.surf, (255,0,0), camera.get_center_screen(), 4)
-        self.deer1.draw(camera)
-        self.deer2.draw(camera)
+        self.sprite_group.draw(camera.surf)
 
         # uncomment to draw each layer of model
         # camera.clear()
