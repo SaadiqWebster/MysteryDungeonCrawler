@@ -1,6 +1,8 @@
+import pygame
 
-class Unit:
-    def __init__(self, spawn_cor):
+class Unit(pygame.sprite.Sprite):
+    def __init__(self, spawn_cor, unit_size):
+        pygame.sprite.Sprite.__init__(self)
         self.id = 'Unit'
         self.state = 'idle'
         self.cor = spawn_cor.copy()
@@ -8,6 +10,9 @@ class Unit:
         self.direction = 0
         self.draw_offset = [0,0]
         self.draw_color = (255,255,255)
+        self.image = pygame.Surface((unit_size-1, unit_size-1))
+        self.image.fill(self.draw_color)
+        self.rect = self.image.get_rect()
         self.alpha = 255
         self.hit_flash_speed = 4
         
@@ -139,6 +144,11 @@ class Unit:
         if self.state == 'kill':
             self.alpha = 255 * float(self.state_timer / self.state_durations['kill'])
 
-    def draw(self):
-        return [self.cor[0] + self.draw_offset[0], self.cor[1] + self.draw_offset[1]]
+    def update_image(self, tile_size):
+        self.rect.x = (self.cor[0] + self.draw_offset[0]) * tile_size
+        self.rect.y = (self.cor[1] + self.draw_offset[1]) * tile_size
+        self.image.set_alpha(self.alpha)
+    
+    # def update_image(self):
+    #     return [self.cor[0] + self.draw_offset[0], self.cor[1] + self.draw_offset[1]]
     

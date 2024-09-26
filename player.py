@@ -1,10 +1,11 @@
 import unit as _u
 
 class Player(_u.Unit):
-    def __init__(self, spawn_cor, stats, inventory):
-        super().__init__(spawn_cor)
+    def __init__(self, spawn_cor, unit_size, stats, inventory):
+        super().__init__(spawn_cor, unit_size)
         self.id = 'Avatar'
         self.draw_color = (0,255,0)
+        self.image.fill(self.draw_color)
 
         if inventory is not None:
             self.inventory = inventory
@@ -78,4 +79,3 @@ class Player(_u.Unit):
             self.stats['hp'] == self.stats['max_hp']
         if equipment.stat == 'max_sp' and self.stats['sp'] > self.stats['max_sp']:
             self.stats['sp'] == self.stats['max_sp']
-

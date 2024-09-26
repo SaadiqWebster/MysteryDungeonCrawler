@@ -2,10 +2,11 @@ import random
 import unit as _u
 
 class Enemy(_u.Unit):
-    def __init__(self):
-        super().__init__([0,0])
+    def __init__(self, unit_size):
+        super().__init__([0,0], unit_size)
         self.id = 'Enemy'
         self.draw_color = (255,0,0)
+        self.image.fill(self.draw_color)
         self.stats = {
             'hp':3,
             'max_hp':3,

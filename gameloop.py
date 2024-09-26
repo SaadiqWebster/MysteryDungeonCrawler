@@ -73,9 +73,9 @@ class MainLoop(GameLoop):
             'visible_traps': False,
             'visible_minimap': False
         }
-        camera.toggle_zoom(self.DEBUG['zoom_in'])
-        
+    
         self.flrmgr = _fm.FloorManager('Mystery Dungeon')
+        self.flrmgr.toggle_zoom(self.DEBUG['zoom_in'])
         self.hud = _h.Hud(CAMERA_SIZE, self.flrmgr)
         floor_properties = { # mystery dungeon maps are around 56 x 72 units in size
             'floor_width': 30,
@@ -102,19 +102,20 @@ class MainLoop(GameLoop):
         
         if input.iskeypressed('left shift') or input.isbuttonpressed(15):
             self.DEBUG['zoom_in'] = not self.DEBUG['zoom_in']
-            camera.toggle_zoom(self.DEBUG['zoom_in'])
+            self.flrmgr.toggle_zoom(self.DEBUG['zoom_in'])
 
     def update(self):
         self.flrmgr.read_input(input)
-        self.flrmgr.update_objects()
+        self.flrmgr.update_objects(camera)
         self.hud.update()
-
 
         if not self.DEBUG['zoom_in']:
             camera.set_position([0,0])
         else:
             player = self.flrmgr.get_player()
             camera.follow_unit(player)
+
+        self.flrmgr.apply_camera(camera)
 
     def draw(self):
         for x in range(self.flrmgr.floor.floor_width):
@@ -132,42 +133,29 @@ class MainLoop(GameLoop):
                     tile_color = (255,0,255)
                 if map_value == 5:
                     tile_color = (0,255,255)
-                tile = pygame.Surface(((camera.tile_size-1, camera.tile_size-1)))
+                tile = pygame.Surface(((self.flrmgr.floor.tile_size-1, self.flrmgr.floor.tile_size-1)))
                 tile.fill(tile_color)
-                camera.draw_tile(tile, cor)
+                camera.draw_tile(tile, cor, self.flrmgr.floor.tile_size)
 
         stairs_draw_color = (255,0,255)
-        tile = pygame.Surface(((camera.tile_size-1, camera.tile_size-1)))
+        tile = pygame.Surface(((self.flrmgr.floor.tile_size-1, self.flrmgr.floor.tile_size-1)))
         tile.fill(stairs_draw_color)
-        camera.draw_tile(tile, self.flrmgr.stairs_cor)
+        camera.draw_tile(tile, self.flrmgr.stairs_cor, self.flrmgr.floor.tile_size)
 
         for trap_id in self.flrmgr.traps:
             trap = self.flrmgr.get_trap(trap_id)
             if trap.visible or self.DEBUG['visible_traps']:
-                tile = pygame.Surface(((camera.tile_size-1, camera.tile_size-1)))
+                tile = pygame.Surface(((self.flrmgr.floor.tile_size-1, self.flrmgr.floor.tile_size-1)))
                 tile.fill(trap.draw_color)
-                camera.draw_tile(tile, trap.draw())
+                camera.draw_tile(tile, trap.draw(), self.flrmgr.floor.tile_size)
 
         for item_id in self.flrmgr.items:
             item = self.flrmgr.get_item(item_id)
-            tile = pygame.Surface(((camera.tile_size-1, camera.tile_size-1)))
+            tile = pygame.Surface(((self.flrmgr.floor.tile_size-1, self.flrmgr.floor.tile_size-1)))
             tile.fill(item.draw_color)
-            camera.draw_tile(tile, item.draw())
+            camera.draw_tile(tile, item.draw(), self.flrmgr.floor.tile_size)
         
-        for unit_id in self.flrmgr.units:
-            unit = self.flrmgr.get_unit(unit_id)
-            tile = pygame.Surface(((camera.tile_size-1, camera.tile_size-1)))
-            tile.fill(unit.draw_color)
-
-            tile.set_alpha(unit.alpha)
-            camera.draw_tile(tile, unit.draw())
-
-        for item_id in self.flrmgr.thrown_items:
-            item = self.flrmgr.get_item(item_id)
-            tile = pygame.Surface(((camera.tile_size-1, camera.tile_size-1)))
-            tile.fill(item.draw_color)
-            camera.draw_tile(tile, item.draw())
-
+        self.flrmgr.sprite_group.draw(camera.surf)
         camera.draw_to_screen(self.hud.draw(), (0, 0))
 
         for menu in self.flrmgr.active_menus:

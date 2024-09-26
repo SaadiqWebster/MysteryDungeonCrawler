@@ -14,6 +14,7 @@ class FloorManager:
         self.units = {}
         self.items = {}
         self.traps = {}
+        self.sprite_group = pygame.sprite.LayeredUpdates()
         self.unit_map = self.floor.generate_empty_map(-1)
         self.item_map = self.floor.generate_empty_map(-1)
         self.trap_map = self.floor.generate_empty_map(-1)
@@ -25,6 +26,9 @@ class FloorManager:
         self.current_turn = 0
         self.active_menus = []
         self.text_log = _l.TextLog()
+
+    def toggle_zoom(self, ZOOM_IN):
+        self.floor.tile_size = 20 if ZOOM_IN else 3
 
     def get_unit(self, unit_id):
         return self.units.get(unit_id, None)
@@ -172,6 +176,20 @@ class FloorManager:
     def close_all_menus(self):
         self.active_menus.clear()
 
+    def apply_camera(self, camera):
+        for sprite in self.sprite_group.sprites():
+            sprite.rect.x -= camera.camera_pos[0]
+            sprite.rect.y -= camera.camera_pos[1]
+
+    def generate_sprite(self, color, spawn_cor):
+        sprite = pygame.sprite.Sprite()
+        sprite.image = pygame.Surface(self.floor.tile_size, self.floor.tile_size)
+        sprite.image.fill(color)
+        sprite.rect = sprite.image.get_rect()
+        sprite.rect.x = spawn_cor[0]
+        sprite.rect.y = spawn_cor[1]
+        return sprite
+
     def generate_test_floor(self):
         self.floor.generate_floor_test()
         self.spawn_player()
@@ -181,6 +199,7 @@ class FloorManager:
         player_stats = None if player is None else player.stats
         player_inventory = None if player is None else player.inventory
     
+        self.sprite_group = pygame.sprite.LayeredUpdates()
         self.units = {}
         self.items = {}
         self.traps = {}
@@ -197,18 +216,36 @@ class FloorManager:
 
         self.floor.generate_floor()
         self.floor_number += 1
-        
 
         self.spawn_stairs()
         self.spawn_player(player_stats, player_inventory)
-        self.spawn_enemy(_e.Enemy(), self.find_empty_tile(self.floor.get_random_room()))
-        self.spawn_enemy(_e.Enemy(), self.find_empty_tile(self.floor.get_random_room()))
+        self.spawn_enemy(_e.Enemy(self.floor.tile_size), self.find_empty_tile(self.floor.get_random_room()))
+        self.spawn_enemy(_e.Enemy(self.floor.tile_size), self.find_empty_tile(self.floor.get_random_room()))
         self.spawn_item(_i.HealthItem(), self.find_empty_tile(self.floor.get_random_room()))
         self.spawn_item(_i.AttackItem(), self.find_empty_tile(self.floor.get_random_room()))
         self.spawn_item(_i.ThrowItem(), self.find_empty_tile(self.floor.get_random_room()))
         self.spawn_item(_i.Equipment(), self.find_empty_tile(self.floor.get_random_room()))
         self.spawn_trap(_t.HitTrap(), self.find_empty_tile(self.floor.get_random_room()))
         self.spawn_trap(_t.DebuffTrap(), self.find_empty_tile(self.floor.get_random_room()))
+
+    def render_floor(self):
+        for x in range(self.floor.floor_width):
+            for y in range(self.floor.floor_height):
+                cor = [x,y]
+                tile_color = (75,75,75) if self.flrmgr.floor.get_tile_signature(cor) != '11111111' else (150,150,150)
+                map_value = self.floor.get_floor_map(cor)
+                if map_value == 1:
+                    tile_color = (0,0,255)
+                if map_value == 2:
+                    tile_color = (255,0,0)
+                if map_value == 3:
+                    tile_color = (0,255,0)
+                if map_value == 4:
+                    tile_color = (255,0,255)
+                if map_value == 5:
+                    tile_color = (0,255,255)
+                
+                floor_tile = self.generate_sprite(tile_color, cor)
 
     def spawn_stairs(self):
         self.stairs_cor = [0,0]
@@ -225,8 +262,9 @@ class FloorManager:
                 room_id = self.floor.get_random_room()
 
         spawn_cor = self.find_empty_tile(room_id)
-        player = _p.Player(spawn_cor, player_stats, player_inventory)
+        player = _p.Player(spawn_cor, self.floor.tile_size, player_stats, player_inventory)
         self.units[self.next_object_id] = player
+        self.sprite_group.add(player)
         self.player_id = self.next_object_id
         self.place_unit(self.next_object_id)
         self.turn_order.append(self.next_object_id)
@@ -239,6 +277,7 @@ class FloorManager:
             enemy.cor = spawn_cor.copy()
             enemy.prev_cor = spawn_cor.copy()
             self.units[self.next_object_id] = enemy
+            self.sprite_group.add(enemy)
             self.place_unit(self.next_object_id)
             self.turn_order.append(self.next_object_id)
             self.next_object_id += 1
@@ -524,7 +563,7 @@ class FloorManager:
                 self.close_all_menus()
                 self.change_turn()
 
-    def update_objects(self):
+    def update_objects(self, camera):
         for i in range(len(self.thrown_items)):
             item_id = self.thrown_items[i]
             item = self.get_item(item_id)
@@ -583,6 +622,8 @@ class FloorManager:
                 self.decide_action(unit_id)
                 
             unit.update_animation()
+            unit.update_image(self.floor.tile_size)
+            self.sprite_group.change_layer(unit, unit.rect.y)
 
     def decide_action(self, unit_id):
         if unit_id != self.player_id:

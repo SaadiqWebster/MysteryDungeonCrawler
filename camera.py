@@ -8,9 +8,6 @@ class Camera():
         self.fill_color = (100,100,100) #(100,100,100)
         self.compass = 0 # in radians
         self.turn_speed = 0.05
-        
-        # DEBUG
-        self.tile_size = 3 # when units are a fixed size, this will no longer be needed
 
     def get_center_screen(self):
         return [float(self.camera_size[0] / 2), float(self.camera_size[1] / 2)]
@@ -23,9 +20,6 @@ class Camera():
 
     def clear(self):
         self.surf.fill(self.fill_color)
-
-    def toggle_zoom(self, ZOOM_IN):
-        self.tile_size = 20 if ZOOM_IN else 3
 
     def turn_clockwise(self):
         self.compass = float((self.compass + self.turn_speed) % (2 * math.pi))
@@ -47,16 +41,17 @@ class Camera():
 
     def follow_unit(self, unit):
         if unit is not None and unit.state != 'attack_forward' and unit.state != 'attack_backward':
-            unit_draw_cor = unit.draw()
-            camera_pos_x = (unit_draw_cor[0]*self.tile_size)-(self.camera_size[0]/2)+(self.tile_size/2)
-            camera_pos_y = (unit_draw_cor[1]*self.tile_size)-(self.camera_size[1]/2)+(self.tile_size/2)
+            unit_draw_cor = [unit.rect.x, unit.rect.y]
+            camera_pos_x = unit_draw_cor[0]-(self.camera_size[0]/2)+(unit.image.get_width()/2)
+            camera_pos_y = unit_draw_cor[1]-(self.camera_size[1]/2)+(unit.image.get_height()/2)
             self.set_position([camera_pos_x, camera_pos_y])
 
-    def draw_tile(self, tile, cor):
-        self.surf.blit(tile, ((cor[0]*self.tile_size)-self.camera_pos[0], (cor[1]*self.tile_size)-self.camera_pos[1]))
+    def draw_tile(self, tile, cor, tile_size):
+        self.surf.blit(tile, ((cor[0]*tile_size)-self.camera_pos[0], (cor[1]*tile_size)-self.camera_pos[1]))
     
     def draw_to_screen(self, img, cor):
         self.surf.blit(img, cor)
     
     def draw(self):
         return self.surf
+
