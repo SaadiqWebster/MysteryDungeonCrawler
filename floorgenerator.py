@@ -18,7 +18,7 @@ class Room:
 
 class FloorGenerator:
     def __init__(self, width, height):
-        self.tile_size = 3
+        self.tile_size = 32
         self.floor_width = width
         self.floor_height = height
         self.floor_map = self.generate_empty_map(0)

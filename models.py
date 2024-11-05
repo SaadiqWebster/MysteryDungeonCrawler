@@ -8,9 +8,8 @@ DEBUG = {
 }
 
 class SpriteStackModel(pygame.sprite.Sprite):
-    def __init__(self, spawn_cor, model_strip, dimensions, draw_offset=0, rotation_offset=0): # rotation in degrees
+    def __init__(self, model_strip, dimensions, draw_offset=0, rotation_offset=0): # rotation in degrees
         pygame.sprite.Sprite.__init__(self)
-        self.cor = spawn_cor
         self.image = pygame.Surface((0,0))
         self.rect = self.image.get_rect()
         self.model_layers = []
@@ -34,12 +33,12 @@ class SpriteStackModel(pygame.sprite.Sprite):
         return cut.copy()
     
     def render_model(self, model_strip):
-        cut_cor = [0, 0]
+        cut_cor = [0,0]
         while cut_cor[1] < model_strip.get_height():
             model_layer = self.cut_image(model_strip, cut_cor, self.layer_width, self.layer_height)
             self.model_layers.insert(0, model_layer)
             cut_cor[1] += self.layer_height
-
+        
         for angle in range(self.total_angles):
             viewing_angle = angle * self.rotation_angle
             base_surf = pygame.Surface((self.layer_width, self.layer_height))
@@ -54,10 +53,31 @@ class SpriteStackModel(pygame.sprite.Sprite):
 
             self.model_angles[angle] = render_surf
 
+    def get_image(self, angle):
+        img_angle = -math.degrees(angle) // self.rotation_angle + self.rotation_offset
+        img_angle = int(img_angle % self.total_angles)
+        return self.model_angles[img_angle]
+
+    def get_rect(self, cor, camera):
+        current_cor = cor.copy()
+        #current_cor[0] -= camera.camera_pos[0]
+        #current_cor[1] -= camera.camera_pos[1]
+        rotated_cor = camera.rotate_vector(current_cor, camera.compass)
+
+        draw_cor = [0,0]
+        draw_cor[0] = rotated_cor[0] - self.image.get_width() // 2
+        draw_cor[1] = rotated_cor[1] - self.image.get_height() // 2
+        draw_cor[1] -= self.draw_offset
+
+        self.rect = self.image.get_rect()
+        self.rect.x = draw_cor[0]
+        self.rect.y = draw_cor[1]
+        self.rect.x -= camera.camera_pos[0]
+        self.rect.y -= camera.camera_pos[1]
+        return self.rect
+
     def update_model(self, camera):
-        angle = -math.degrees(camera.compass) // self.rotation_angle + self.rotation_offset
-        angle = int(angle % self.total_angles)
-        self.image = self.model_angles[angle]
+        self.image = self.get_image(camera.compass)
 
         current_cor = self.cor.copy()
         current_cor[0] -= camera.camera_pos[0]
@@ -72,9 +92,40 @@ class SpriteStackModel(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = draw_cor[0]
         self.rect.y = draw_cor[1]
+        #self.rect.x -= camera.camera_pos[0]
+        #self.rect.y -= camera.camera_pos[1]
 
         # if DEBUG['show rotated_cor']:
         #     pygame.draw.circle(camera.surf, (0,0,255), rotated_cor, 1)
         # if DEBUG['show draw_cor']:
         #     pygame.draw.circle(camera.surf, (0,255,0), draw_cor, 1)
 
+
+class FloorTile(pygame.sprite.Sprite):
+    def __init__(self, cor, model):
+        pygame.sprite.Sprite.__init__(self)
+        self.cor = cor
+        self.model = model
+        self.image = self.model.get_image(0)
+        self.rect = self.image.get_rect()
+ 
+    def update_image(self, tile_size, camera):
+        self.image = self.model.get_image(camera.compass)
+        self.get_rect(tile_size, camera)
+
+    def get_rect(self, tile_size, camera):
+        current_cor = [self.cor[0]*tile_size, self.cor[1]*tile_size]
+        current_cor[0] -= camera.camera_pos[0]
+        current_cor[1] -= camera.camera_pos[1]
+        rotated_cor = camera.rotate_vector(current_cor, camera.compass)
+
+        draw_cor = [0,0]
+        draw_cor[0] = rotated_cor[0] - self.image.get_width() // 2
+        draw_cor[1] = rotated_cor[1] - self.image.get_height() // 2
+        draw_cor[1] -= self.model.draw_offset
+
+        self.rect = self.image.get_rect()
+        self.rect.x = draw_cor[0]
+        self.rect.y = draw_cor[1]
+        #self.rect.x -= camera.camera_pos[0]
+        #self.rect.y -= camera.camera_pos[1]

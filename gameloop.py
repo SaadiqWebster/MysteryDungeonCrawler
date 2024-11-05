@@ -63,12 +63,13 @@ class GameLoop:
         clock.tick(FPS)
 
 
+
 class MainLoop(GameLoop):
     def __init__(self):
         super().__init__()
 
         self.DEBUG = {
-            'framerate': False,
+            'framerate': True,
             'zoom_in': True,
             'visible_traps': False,
             'visible_minimap': False
@@ -92,8 +93,17 @@ class MainLoop(GameLoop):
             self.flrmgr.visibility_map = self.flrmgr.floor.generate_empty_map(1)
         #self.flrmgr.floor.print_map(flrmgr.floor.room_map)
 
+        self.floor_sprite_group = pygame.sprite.LayeredUpdates()
+
+
     def read_events(self):
         super().read_events()
+
+        if input.iskeydown('a') or input.isbuttondown('right stick left'):
+            camera.turn_clockwise()
+        
+        if input.iskeydown('d') or input.isbuttondown('right stick right'):
+            camera.turn_counterclockwise()
         
         if input.iskeypressed('tab') or input.isbuttonpressed(6):
             self.flrmgr.generate_new_floor()
@@ -106,52 +116,62 @@ class MainLoop(GameLoop):
 
     def update(self):
         self.flrmgr.read_input(input)
-        self.flrmgr.update_objects(camera)
+        self.flrmgr.update_objects()
         self.hud.update()
 
         if not self.DEBUG['zoom_in']:
             camera.set_position([0,0])
         else:
             player = self.flrmgr.get_player()
-            camera.follow_unit(player)
+            camera.follow_unit(player, self.flrmgr.floor.tile_size)
 
-        self.flrmgr.apply_camera(camera)
+        self.flrmgr.update_sprite_images(camera)
+        self.flrmgr.update_sprites(camera)
 
     def draw(self):
-        for x in range(self.flrmgr.floor.floor_width):
-            for y in range(self.flrmgr.floor.floor_height):
-                cor = [x,y]
-                tile_color = (75,75,75) if self.flrmgr.floor.get_tile_signature(cor) != '11111111' else (150,150,150)
-                map_value = self.flrmgr.floor.get_floor_map(cor)
-                if map_value == 1:
-                    tile_color = (0,0,255)
-                if map_value == 2:
-                    tile_color = (255,0,0)
-                if map_value == 3:
-                    tile_color = (0,255,0)
-                if map_value == 4:
-                    tile_color = (255,0,255)
-                if map_value == 5:
-                    tile_color = (0,255,255)
-                tile = pygame.Surface(((self.flrmgr.floor.tile_size-1, self.flrmgr.floor.tile_size-1)))
-                tile.fill(tile_color)
-                camera.draw_tile(tile, cor, self.flrmgr.floor.tile_size)
+        # for x in range(self.flrmgr.floor.floor_width):
+        #     for y in range(self.flrmgr.floor.floor_height):
+        #         cor = [x,y]
+        #         tile_color = (75,75,75) if self.flrmgr.floor.get_tile_signature(cor) != '11111111' else (150,150,150)
+        #         map_value = self.flrmgr.floor.get_floor_map(cor)
+        #         if map_value == 1:
+        #             tile_color = (0,0,255)
+        #         if map_value == 2:
+        #             tile_color = (255,0,0)
+        #         if map_value == 3:
+        #             tile_color = (0,255,0)
+        #         if map_value == 4:
+        #             tile_color = (255,0,255)
+        #         if map_value == 5:
+        #             tile_color = (0,255,255)
+        #         tile = pygame.Surface(((self.flrmgr.floor.tile_size, self.flrmgr.floor.tile_size)))
+        #         tile.fill(tile_color)
+        #         camera.draw_tile(tile, cor, self.flrmgr.floor.tile_size)
+
+        #         tile = pygame.sprite.Sprite()
+        #         tile.image = pygame.Surface(((self.flrmgr.floor.tile_size, self.flrmgr.floor.tile_size)))
+        #         tile.image.fill(tile_color)
+        #         tile.rect = tile.image.get_rect()
+        #         tile.rect.x = (x*self.flrmgr.floor.tile_size)-camera.camera_pos[0]
+        #         tile.rect.y = (y*self.flrmgr.floor.tile_size)-camera.camera_pos[1]
+        #         self.floor_sprite_group.add(tile)
+        #         self.floor_sprite_group.change_layer(tile, tile.rect.y)
 
         stairs_draw_color = (255,0,255)
-        tile = pygame.Surface(((self.flrmgr.floor.tile_size-1, self.flrmgr.floor.tile_size-1)))
+        tile = pygame.Surface(((self.flrmgr.floor.tile_size, self.flrmgr.floor.tile_size)))
         tile.fill(stairs_draw_color)
         camera.draw_tile(tile, self.flrmgr.stairs_cor, self.flrmgr.floor.tile_size)
 
         for trap_id in self.flrmgr.traps:
             trap = self.flrmgr.get_trap(trap_id)
             if trap.visible or self.DEBUG['visible_traps']:
-                tile = pygame.Surface(((self.flrmgr.floor.tile_size-1, self.flrmgr.floor.tile_size-1)))
+                tile = pygame.Surface(((self.flrmgr.floor.tile_size, self.flrmgr.floor.tile_size)))
                 tile.fill(trap.draw_color)
                 camera.draw_tile(tile, trap.draw(), self.flrmgr.floor.tile_size)
 
         for item_id in self.flrmgr.items:
             item = self.flrmgr.get_item(item_id)
-            tile = pygame.Surface(((self.flrmgr.floor.tile_size-1, self.flrmgr.floor.tile_size-1)))
+            tile = pygame.Surface(((self.flrmgr.floor.tile_size, self.flrmgr.floor.tile_size)))
             tile.fill(item.draw_color)
             camera.draw_tile(tile, item.draw(), self.flrmgr.floor.tile_size)
         

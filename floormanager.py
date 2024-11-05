@@ -1,7 +1,7 @@
 import pygame, random
 import floorgenerator as _fg
 import menu as _m, textlog as _l
-import player as _p, enemies as _e, items as _i, traps as _t
+import models as _model, player as _p, enemies as _e, items as _i, traps as _t
 
 class FloorManager:
     def __init__(self, dungeon_name):
@@ -28,7 +28,7 @@ class FloorManager:
         self.text_log = _l.TextLog()
 
     def toggle_zoom(self, ZOOM_IN):
-        self.floor.tile_size = 20 if ZOOM_IN else 3
+        self.floor.tile_size = 32 if ZOOM_IN else 3
 
     def get_unit(self, unit_id):
         return self.units.get(unit_id, None)
@@ -176,11 +176,6 @@ class FloorManager:
     def close_all_menus(self):
         self.active_menus.clear()
 
-    def apply_camera(self, camera):
-        for sprite in self.sprite_group.sprites():
-            sprite.rect.x -= camera.camera_pos[0]
-            sprite.rect.y -= camera.camera_pos[1]
-
     def generate_sprite(self, color, spawn_cor):
         sprite = pygame.sprite.Sprite()
         sprite.image = pygame.Surface(self.floor.tile_size, self.floor.tile_size)
@@ -195,6 +190,10 @@ class FloorManager:
         self.spawn_player()
 
     def generate_new_floor(self):
+        self.models = {
+            'testblock':_model.SpriteStackModel(pygame.image.load('models/testblock.png'), (32,32), 0)
+        }
+
         player = self.get_player()
         player_stats = None if player is None else player.stats
         player_inventory = None if player is None else player.inventory
@@ -217,6 +216,8 @@ class FloorManager:
         self.floor.generate_floor()
         self.floor_number += 1
 
+        self.render_floor(self.models['testblock'])
+
         self.spawn_stairs()
         self.spawn_player(player_stats, player_inventory)
         self.spawn_enemy(_e.Enemy(self.floor.tile_size), self.find_empty_tile(self.floor.get_random_room()))
@@ -228,24 +229,16 @@ class FloorManager:
         self.spawn_trap(_t.HitTrap(), self.find_empty_tile(self.floor.get_random_room()))
         self.spawn_trap(_t.DebuffTrap(), self.find_empty_tile(self.floor.get_random_room()))
 
-    def render_floor(self):
+    def render_floor(self, model):
+        tile_number = 0
         for x in range(self.floor.floor_width):
             for y in range(self.floor.floor_height):
                 cor = [x,y]
-                tile_color = (75,75,75) if self.flrmgr.floor.get_tile_signature(cor) != '11111111' else (150,150,150)
-                map_value = self.floor.get_floor_map(cor)
-                if map_value == 1:
-                    tile_color = (0,0,255)
-                if map_value == 2:
-                    tile_color = (255,0,0)
-                if map_value == 3:
-                    tile_color = (0,255,0)
-                if map_value == 4:
-                    tile_color = (255,0,255)
-                if map_value == 5:
-                    tile_color = (0,255,255)
-                
-                floor_tile = self.generate_sprite(tile_color, cor)
+                if self.floor.get_floor_map(cor) == 0:
+                    floor_tile = _model.FloorTile(cor, model)
+                    self.sprite_group.add(floor_tile)
+                    tile_number += 1
+                    #print(tile_number)
 
     def spawn_stairs(self):
         self.stairs_cor = [0,0]
@@ -418,7 +411,7 @@ class FloorManager:
                 return
 
             if input.iskeypressed('z') or input.isbuttonpressed(3):
-                options = ['Attack','Skills','Items','Wait','Exit']
+                options = ['Attack','Sdestroys','Items','Wait','Exit']
                 if player.cor == self.stairs_cor:
                     options.insert(-1, 'Proceed')
                 self.open_menu(_m.Menu((2, 40), options))
@@ -563,7 +556,7 @@ class FloorManager:
                 self.close_all_menus()
                 self.change_turn()
 
-    def update_objects(self, camera):
+    def update_objects(self):
         for i in range(len(self.thrown_items)):
             item_id = self.thrown_items[i]
             item = self.get_item(item_id)
@@ -594,19 +587,20 @@ class FloorManager:
 
                 if prev_state == 'hit':
                     if unit.stats['hp'] <= 0:
-                        unit.kill()
+                        unit.destroy()
                         self.log_message(unit.id + ' was defeated!')
                     else:
                         self.attacked_units.remove(unit_id)
 
-                if prev_state == 'kill':
+                if prev_state == 'destroy':
                     self.attacked_units.remove(unit_id)
                     if unit_id == self.player_id:
                         self.player_id = -1
                     self.set_unit_map(unit.cor, -1)
                     self.turn_order.remove(unit_id)
+                    self.get_unit(unit_id).kill()
                     self.units.pop(unit_id)
-                    self.current_turn = self.current_turn % len(self.turn_order) # if the unit killed was the very last one in the turn order it caused a defect. not sure if this line is the best solution. might cause problems later?
+                    self.current_turn = self.current_turn % len(self.turn_order) # if the unit destroyed was the very last one in the turn order it caused a defect. not sure if this line is the best solution. might cause problems later?
                     break
 
                 if prev_state == 'move':
@@ -622,8 +616,6 @@ class FloorManager:
                 self.decide_action(unit_id)
                 
             unit.update_animation()
-            unit.update_image(self.floor.tile_size)
-            self.sprite_group.change_layer(unit, unit.rect.y)
 
     def decide_action(self, unit_id):
         if unit_id != self.player_id:
@@ -642,3 +634,15 @@ class FloorManager:
         next_unit = self.get_unit(next_unit_id)
         if next_unit.state == 'idle':
             self.decide_action(next_unit_id)
+
+    def update_sprite_images(self, camera):
+        for sprite in self.sprite_group.sprites():
+                sprite.update_image(self.floor.tile_size, camera)
+
+    def update_sprites(self, camera):
+        for sprite in self.sprite_group.sprites():
+            sprite.update_image(self.floor.tile_size, camera)
+            self.sprite_group.change_layer(sprite, sprite.rect.y + sprite.image.get_height())
+
+
+            

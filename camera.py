@@ -5,9 +5,9 @@ class Camera():
         self.camera_size = CAMERA_SIZE
         self.surf = pygame.Surface(self.camera_size)
         self.camera_pos = [0,0]
-        self.fill_color = (100,100,100) #(100,100,100)
+        self.fill_color = (0,0,100) #(100,100,100)
         self.compass = 0 # in radians
-        self.turn_speed = 0.05
+        self.turn_speed = 0.02
 
     def get_center_screen(self):
         return [float(self.camera_size[0] / 2), float(self.camera_size[1] / 2)]
@@ -39,9 +39,9 @@ class Camera():
         rotated_cor[1] += pivot[1]
         return rotated_cor
 
-    def follow_unit(self, unit):
+    def follow_unit(self, unit, tile_size):
         if unit is not None and unit.state != 'attack_forward' and unit.state != 'attack_backward':
-            unit_draw_cor = [unit.rect.x, unit.rect.y]
+            unit_draw_cor = unit.get_draw_cor(tile_size)
             camera_pos_x = unit_draw_cor[0]-(self.camera_size[0]/2)+(unit.image.get_width()/2)
             camera_pos_y = unit_draw_cor[1]-(self.camera_size[1]/2)+(unit.image.get_height()/2)
             self.set_position([camera_pos_x, camera_pos_y])

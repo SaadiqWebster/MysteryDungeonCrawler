@@ -8,33 +8,28 @@ class SpriteStackTestLoop(GameLoop):
 
         self.movement_speed = 1
         self.velocity = [0,0]
-        
-        deer_model_strip = pygame.image.load('models/deer.png')
-        knight_model_strip = pygame.image.load('models/chr_knight.png')
-
-        camera_center = camera.get_center_position()
-        spawn_cor = [camera_center[0], camera_center[1]-50]
-        self.deer1 = _m.SpriteStackModel(spawn_cor, deer_model_strip, (16, 9), 13)
-        spawn_cor = [camera_center[0]-10, camera_center[1]-60]
-        self.deer2 = _m.SpriteStackModel(spawn_cor, deer_model_strip, (16, 9), 13)
-        spawn_cor = [camera_center[0]+10, camera_center[1]-60]
-        self.deer3 = _m.SpriteStackModel(spawn_cor, deer_model_strip, (16, 9), 13)
-        
-        camera_center = camera.get_center_position()
-        spawn_cor = [camera_center[0], camera_center[1]+50]
-        self.knight1 = _m.SpriteStackModel(spawn_cor, knight_model_strip, (20, 21), 13)
-        spawn_cor = [camera_center[0]-10, camera_center[1]+60]
-        self.knight2 = _m.SpriteStackModel(spawn_cor, knight_model_strip, (20, 21), 13)
-        spawn_cor = [camera_center[0]+10, camera_center[1]+60]
-        self.knight3 = _m.SpriteStackModel(spawn_cor, knight_model_strip, (20, 21), 13)
 
         self.sprite_group = pygame.sprite.LayeredUpdates()
-        self.sprite_group.add(self.deer1)
-        self.sprite_group.add(self.deer2)
-        self.sprite_group.add(self.deer3)
-        self.sprite_group.add(self.knight1)
-        self.sprite_group.add(self.knight2)
-        self.sprite_group.add(self.knight3)
+        
+        deer_model_strip = pygame.image.load('models/deer.png')
+        deer_model = _m.SpriteStackModel(deer_model_strip, (16, 9), 13)
+        knight_model_strip = pygame.image.load('models/chr_knight.png')
+        knight_model = _m.SpriteStackModel(knight_model_strip, (20, 21), 13)
+        
+        camera_center = camera.get_center_position()
+        spawn_cor = [camera_center[0], camera_center[1]-50]
+        self.sprite_group.add(_m.FloorTile(spawn_cor, deer_model))
+        spawn_cor = [camera_center[0]-10, camera_center[1]-60]
+        self.sprite_group.add(_m.FloorTile(spawn_cor, deer_model))
+        spawn_cor = [camera_center[0]+10, camera_center[1]-60]
+        self.sprite_group.add(_m.FloorTile(spawn_cor, deer_model))
+        
+        spawn_cor = [camera_center[0], camera_center[1]+50]
+        self.sprite_group.add(_m.FloorTile(spawn_cor, knight_model))
+        spawn_cor = [camera_center[0]-10, camera_center[1]+60]
+        self.sprite_group.add(_m.FloorTile(spawn_cor, knight_model))
+        spawn_cor = [camera_center[0]+10, camera_center[1]+60]
+        self.sprite_group.add(_m.FloorTile(spawn_cor, knight_model))
 
     def start(self):
         super().start()
@@ -71,9 +66,11 @@ class SpriteStackTestLoop(GameLoop):
             rotated_velocity[1] /= magnitude
         camera.camera_pos[0] += rotated_velocity[0]
         camera.camera_pos[1] += rotated_velocity[1]
+        print(camera.camera_pos)
 
         for sprite in self.sprite_group.sprites():
-            sprite.update_model(camera)
+            #sprite.update_model(camera)
+            sprite.update_image(1, camera)
             self.sprite_group.change_layer(sprite, sprite.rect.y)
 
     def draw(self):

@@ -10,7 +10,7 @@ class Unit(pygame.sprite.Sprite):
         self.direction = 0
         self.draw_offset = [0,0]
         self.draw_color = (255,255,255)
-        self.image = pygame.Surface((unit_size-1, unit_size-1))
+        self.image = pygame.Surface((unit_size, unit_size))
         self.image.fill(self.draw_color)
         self.rect = self.image.get_rect()
         self.alpha = 255
@@ -43,7 +43,7 @@ class Unit(pygame.sprite.Sprite):
             'attack_forward':8,
             'attack_backward':8,
             'hit':20,
-            'kill':30
+            'destroy':30
         }
 
     def get_modified_stat(self, stat):
@@ -93,8 +93,8 @@ class Unit(pygame.sprite.Sprite):
         self.stats['hp'] -= damage
         self.set_state('hit')
 
-    def kill(self):
-        self.set_state('kill')
+    def destroy(self):
+        self.set_state('destroy')
 
     def update_state(self):
         if self.state != 'idle':
@@ -141,12 +141,19 @@ class Unit(pygame.sprite.Sprite):
             if self.state_timer % self.hit_flash_speed == 0:
                 self.alpha = 0 if self.alpha == 255 else 255
 
-        if self.state == 'kill':
-            self.alpha = 255 * float(self.state_timer / self.state_durations['kill'])
+        if self.state == 'destroy':
+            self.alpha = 255 * float(self.state_timer / self.state_durations['destroy'])
+    
+    def get_draw_cor(self, tile_size):
+        draw_cor = [0,0]
+        draw_cor[0] = (self.cor[0] + self.draw_offset[0]) * tile_size
+        draw_cor[1] = (self.cor[1] + self.draw_offset[1]) * tile_size
+        return draw_cor
 
-    def update_image(self, tile_size):
-        self.rect.x = (self.cor[0] + self.draw_offset[0]) * tile_size
-        self.rect.y = (self.cor[1] + self.draw_offset[1]) * tile_size
+    def update_image(self, tile_size, camera):
+        drw_cor = self.get_draw_cor(tile_size)
+        self.rect.x = drw_cor[0] - camera.camera_pos[0]
+        self.rect.y = drw_cor[1] - camera.camera_pos[1]
         self.image.set_alpha(self.alpha)
     
     # def update_image(self):
