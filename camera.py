@@ -42,6 +42,8 @@ class Camera():
     def follow_unit(self, unit, tile_size):
         if unit is not None and unit.state != 'attack_forward' and unit.state != 'attack_backward':
             unit_draw_cor = unit.get_draw_cor(tile_size)
+            unit_draw_cor[0] -= float(unit.image.get_height() / 2)
+            unit_draw_cor[1] -= float(unit.image.get_width() / 2)
             camera_pos_x = unit_draw_cor[0]-(self.camera_size[0]/2)+(unit.image.get_width()/2)
             camera_pos_y = unit_draw_cor[1]-(self.camera_size[1]/2)+(unit.image.get_height()/2)
             self.set_position([camera_pos_x, camera_pos_y])

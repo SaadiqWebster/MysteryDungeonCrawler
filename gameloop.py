@@ -69,7 +69,7 @@ class MainLoop(GameLoop):
         super().__init__()
 
         self.DEBUG = {
-            'framerate': True,
+            'framerate': False,
             'zoom_in': True,
             'visible_traps': False,
             'visible_minimap': False
@@ -115,7 +115,7 @@ class MainLoop(GameLoop):
             self.flrmgr.toggle_zoom(self.DEBUG['zoom_in'])
 
     def update(self):
-        self.flrmgr.read_input(input)
+        self.flrmgr.read_input(input, camera)
         self.flrmgr.update_objects()
         self.hud.update()
 
@@ -125,38 +125,10 @@ class MainLoop(GameLoop):
             player = self.flrmgr.get_player()
             camera.follow_unit(player, self.flrmgr.floor.tile_size)
 
-        self.flrmgr.update_sprite_images(camera)
+        #self.flrmgr.update_sprite_images(camera)
         self.flrmgr.update_sprites(camera)
 
     def draw(self):
-        # for x in range(self.flrmgr.floor.floor_width):
-        #     for y in range(self.flrmgr.floor.floor_height):
-        #         cor = [x,y]
-        #         tile_color = (75,75,75) if self.flrmgr.floor.get_tile_signature(cor) != '11111111' else (150,150,150)
-        #         map_value = self.flrmgr.floor.get_floor_map(cor)
-        #         if map_value == 1:
-        #             tile_color = (0,0,255)
-        #         if map_value == 2:
-        #             tile_color = (255,0,0)
-        #         if map_value == 3:
-        #             tile_color = (0,255,0)
-        #         if map_value == 4:
-        #             tile_color = (255,0,255)
-        #         if map_value == 5:
-        #             tile_color = (0,255,255)
-        #         tile = pygame.Surface(((self.flrmgr.floor.tile_size, self.flrmgr.floor.tile_size)))
-        #         tile.fill(tile_color)
-        #         camera.draw_tile(tile, cor, self.flrmgr.floor.tile_size)
-
-        #         tile = pygame.sprite.Sprite()
-        #         tile.image = pygame.Surface(((self.flrmgr.floor.tile_size, self.flrmgr.floor.tile_size)))
-        #         tile.image.fill(tile_color)
-        #         tile.rect = tile.image.get_rect()
-        #         tile.rect.x = (x*self.flrmgr.floor.tile_size)-camera.camera_pos[0]
-        #         tile.rect.y = (y*self.flrmgr.floor.tile_size)-camera.camera_pos[1]
-        #         self.floor_sprite_group.add(tile)
-        #         self.floor_sprite_group.change_layer(tile, tile.rect.y)
-
         stairs_draw_color = (255,0,255)
         tile = pygame.Surface(((self.flrmgr.floor.tile_size, self.flrmgr.floor.tile_size)))
         tile.fill(stairs_draw_color)
@@ -175,7 +147,8 @@ class MainLoop(GameLoop):
             tile.fill(item.draw_color)
             camera.draw_tile(tile, item.draw(), self.flrmgr.floor.tile_size)
         
-        self.flrmgr.sprite_group.draw(camera.surf)
+        #self.flrmgr.floor_sprite_group.draw(camera.surf)
+        self.flrmgr.obj_sprite_group.draw(camera.surf)
         camera.draw_to_screen(self.hud.draw(), (0, 0))
 
         for menu in self.flrmgr.active_menus:

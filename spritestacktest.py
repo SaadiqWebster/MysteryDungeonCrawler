@@ -66,7 +66,7 @@ class SpriteStackTestLoop(GameLoop):
             rotated_velocity[1] /= magnitude
         camera.camera_pos[0] += rotated_velocity[0]
         camera.camera_pos[1] += rotated_velocity[1]
-        print(camera.camera_pos)
+        #print(camera.camera_pos)
 
         for sprite in self.sprite_group.sprites():
             #sprite.update_model(camera)

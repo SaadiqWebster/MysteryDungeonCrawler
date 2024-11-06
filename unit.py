@@ -1,4 +1,4 @@
-import pygame
+import pygame, models as _m
 
 class Unit(pygame.sprite.Sprite):
     def __init__(self, spawn_cor, unit_size):
@@ -151,11 +151,26 @@ class Unit(pygame.sprite.Sprite):
         return draw_cor
 
     def update_image(self, tile_size, camera):
-        drw_cor = self.get_draw_cor(tile_size)
-        self.rect.x = drw_cor[0] - camera.camera_pos[0]
-        self.rect.y = drw_cor[1] - camera.camera_pos[1]
         self.image.set_alpha(self.alpha)
+        self.get_rect(tile_size, camera)
+        #draw_cor = self.get_draw_cor(tile_size)
+        #self.rect.center = (draw_cor[0] - camera.camera_pos[0], draw_cor[1] - camera.camera_pos[1])
+        #self.rect.x = draw_cor[0] - camera.camera_pos[0]
+        #self.rect.y = draw_cor[1] - camera.camera_pos[1]
     
-    # def update_image(self):
-    #     return [self.cor[0] + self.draw_offset[0], self.cor[1] + self.draw_offset[1]]
+    def get_rect(self, tile_size, camera):
+        current_cor = self.get_draw_cor(tile_size)
+        current_cor[0] -= camera.camera_pos[0]
+        current_cor[1] -= camera.camera_pos[1]
+        rotated_cor = camera.rotate_vector(current_cor, camera.compass)
+
+        draw_cor = [0,0]
+        draw_cor[0] = rotated_cor[0] - self.image.get_width() // 2
+        draw_cor[1] = rotated_cor[1] - self.image.get_height() // 2
+
+        #self.rect = self.image.get_rect(center = draw_cor)
+        self.rect.x = draw_cor[0]
+        self.rect.y = draw_cor[1]
+        #self.rect.x -= camera.camera_pos[0]
+        #self.rect.y -= camera.camera_pos[1]
     

@@ -1,4 +1,4 @@
-import pygame, random
+import pygame, random, math
 import floorgenerator as _fg
 import menu as _m, textlog as _l
 import models as _model, player as _p, enemies as _e, items as _i, traps as _t
@@ -14,7 +14,8 @@ class FloorManager:
         self.units = {}
         self.items = {}
         self.traps = {}
-        self.sprite_group = pygame.sprite.LayeredUpdates()
+        self.floor_sprite_group = pygame.sprite.LayeredUpdates()
+        self.obj_sprite_group = pygame.sprite.LayeredUpdates()
         self.unit_map = self.floor.generate_empty_map(-1)
         self.item_map = self.floor.generate_empty_map(-1)
         self.trap_map = self.floor.generate_empty_map(-1)
@@ -191,14 +192,15 @@ class FloorManager:
 
     def generate_new_floor(self):
         self.models = {
-            'testblock':_model.SpriteStackModel(pygame.image.load('models/testblock.png'), (32,32), 0)
+            'wallblock': _model.SpriteStackModel(pygame.image.load('models/testblock.png'), (32,32), 0),
+            'floorblock': _model.SpriteStackModel(pygame.image.load('models/testblock.png'), (32,32), 28)
         }
-
         player = self.get_player()
         player_stats = None if player is None else player.stats
         player_inventory = None if player is None else player.inventory
     
-        self.sprite_group = pygame.sprite.LayeredUpdates()
+        self.floor_sprite_group = pygame.sprite.LayeredUpdates()
+        self.obj_sprite_group = pygame.sprite.LayeredUpdates()
         self.units = {}
         self.items = {}
         self.traps = {}
@@ -216,7 +218,7 @@ class FloorManager:
         self.floor.generate_floor()
         self.floor_number += 1
 
-        self.render_floor(self.models['testblock'])
+        self.render_room(self.models)
 
         self.spawn_stairs()
         self.spawn_player(player_stats, player_inventory)
@@ -229,14 +231,19 @@ class FloorManager:
         self.spawn_trap(_t.HitTrap(), self.find_empty_tile(self.floor.get_random_room()))
         self.spawn_trap(_t.DebuffTrap(), self.find_empty_tile(self.floor.get_random_room()))
 
-    def render_floor(self, model):
+    def render_room(self, models):
         tile_number = 0
+
         for x in range(self.floor.floor_width):
             for y in range(self.floor.floor_height):
                 cor = [x,y]
+                
+                floor_tile = _model.FloorTile(cor, models['floorblock'])
+                self.floor_sprite_group.add(floor_tile)
+
                 if self.floor.get_floor_map(cor) == 0:
-                    floor_tile = _model.FloorTile(cor, model)
-                    self.sprite_group.add(floor_tile)
+                    wall_tile = _model.FloorTile(cor, models['wallblock'])
+                    self.obj_sprite_group.add(wall_tile)
                     tile_number += 1
                     #print(tile_number)
 
@@ -257,7 +264,7 @@ class FloorManager:
         spawn_cor = self.find_empty_tile(room_id)
         player = _p.Player(spawn_cor, self.floor.tile_size, player_stats, player_inventory)
         self.units[self.next_object_id] = player
-        self.sprite_group.add(player)
+        self.obj_sprite_group.add(player)
         self.player_id = self.next_object_id
         self.place_unit(self.next_object_id)
         self.turn_order.append(self.next_object_id)
@@ -270,7 +277,7 @@ class FloorManager:
             enemy.cor = spawn_cor.copy()
             enemy.prev_cor = spawn_cor.copy()
             self.units[self.next_object_id] = enemy
-            self.sprite_group.add(enemy)
+            self.obj_sprite_group.add(enemy)
             self.place_unit(self.next_object_id)
             self.turn_order.append(self.next_object_id)
             self.next_object_id += 1
@@ -388,7 +395,7 @@ class FloorManager:
 
             self.log_message(trap.log_message)
 
-    def read_input(self, input):
+    def read_input(self, input, camera):
         player = self.get_player()
         active_menu = self.get_active_menu()
 
@@ -411,7 +418,7 @@ class FloorManager:
                 return
 
             if input.iskeypressed('z') or input.isbuttonpressed(3):
-                options = ['Attack','Sdestroys','Items','Wait','Exit']
+                options = ['Attack','Skills','Items','Wait','Exit']
                 if player.cor == self.stairs_cor:
                     options.insert(-1, 'Proceed')
                 self.open_menu(_m.Menu((2, 40), options))
@@ -421,22 +428,37 @@ class FloorManager:
                 self.close_all_menus()
 
             input_direction = [0, 0]
-            
             if input.iskeydown('up') or input.isbuttondown('left stick up') or input.isbuttondown(11):
                 input_direction[1] -= 1
-            
+
             if input.iskeydown('down')  or input.isbuttondown('left stick down') or input.isbuttondown(12):
                 input_direction[1] += 1
-            
+
             if input.iskeydown('left')  or input.isbuttondown('left stick left') or input.isbuttondown(13):
                 input_direction[0] -= 1
-            
+
             if input.iskeydown('right')  or input.isbuttondown('left stick right') or input.isbuttondown(14):
                 input_direction[0] += 1
             
+            rotated_direction = [0, 0]
+            if input_direction != [0, 0]:
+                rotated_direction[0] = float((input_direction[0] * math.cos(-camera.compass)) - (input_direction[1] * math.sin(-camera.compass)))
+                rotated_direction[1] = float((input_direction[0] * math.sin(-camera.compass)) + (input_direction[1] * math.cos(-camera.compass)))
+                magnitude = float(math.sqrt(input_direction[0]**2 + input_direction[1]**2))
+                rotated_direction[0] /= magnitude
+                rotated_direction[1] /= magnitude
+                #print(rotated_direction)
 
-            if input_direction != [0,0] and player.state == 'idle' and not self.active_menus and not self.moving_units:
-                next_cor = [input_direction[0] + player.cor[0], input_direction[1] + player.cor[1]]
+                for i, direction in enumerate(rotated_direction):
+                    if direction < -0.5:
+                        rotated_direction[i] = -1
+                    elif direction > 0.5:
+                        rotated_direction[i] = 1
+                    else:
+                        rotated_direction[i] = 0
+
+            if rotated_direction != [0,0] and player.state == 'idle' and not self.active_menus and not self.moving_units:
+                next_cor = [rotated_direction[0] + player.cor[0], rotated_direction[1] + player.cor[1]]
                 player.set_direction(next_cor)
                 
                 # this makes it so that the player cannot enter or exit a pathway diagonally
@@ -444,7 +466,7 @@ class FloorManager:
                 
                 if input.iskeydown('left ctrl')  or input.isbuttondown('left trigger'):
                     block_direction = True
-                elif (input.iskeydown('left alt')  or input.isbuttondown(4)) and 0 in input_direction:
+                elif (input.iskeydown('left alt')  or input.isbuttondown(4)) and 0 in rotated_direction:
                     block_direction = True
 
                 if self.iswalkabletile(next_cor) and not block_direction:
@@ -635,14 +657,14 @@ class FloorManager:
         if next_unit.state == 'idle':
             self.decide_action(next_unit_id)
 
-    def update_sprite_images(self, camera):
-        for sprite in self.sprite_group.sprites():
-                sprite.update_image(self.floor.tile_size, camera)
-
     def update_sprites(self, camera):
-        for sprite in self.sprite_group.sprites():
+        for sprite in self.floor_sprite_group.sprites():
             sprite.update_image(self.floor.tile_size, camera)
-            self.sprite_group.change_layer(sprite, sprite.rect.y + sprite.image.get_height())
+            self.floor_sprite_group.change_layer(sprite, sprite.rect.center[1])
+
+        for sprite in self.obj_sprite_group.sprites():
+            sprite.update_image(self.floor.tile_size, camera)
+            self.obj_sprite_group.change_layer(sprite, sprite.rect.center[1])
 
 
             
