@@ -6,7 +6,7 @@ class Camera():
         self.surf = pygame.Surface(self.camera_size)
         self.camera_pos = [0,0]
         self.fill_color = (0,0,100) #(100,100,100)
-        self.compass = 0 # in radians
+        self.compass = float(math.pi/4) # in radians
         self.turn_speed = 0.02
 
     def get_center_screen(self):

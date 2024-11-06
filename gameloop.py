@@ -95,7 +95,6 @@ class MainLoop(GameLoop):
 
         self.floor_sprite_group = pygame.sprite.LayeredUpdates()
 
-
     def read_events(self):
         super().read_events()
 
