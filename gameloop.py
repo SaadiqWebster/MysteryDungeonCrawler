@@ -93,8 +93,6 @@ class MainLoop(GameLoop):
             self.flrmgr.visibility_map = self.flrmgr.floor.generate_empty_map(1)
         #self.flrmgr.floor.print_map(flrmgr.floor.room_map)
 
-        self.floor_sprite_group = pygame.sprite.LayeredUpdates()
-
     def read_events(self):
         super().read_events()
 
@@ -124,7 +122,6 @@ class MainLoop(GameLoop):
             player = self.flrmgr.get_player()
             camera.follow_unit(player, self.flrmgr.floor.tile_size)
 
-        #self.flrmgr.update_sprite_images(camera)
         self.flrmgr.update_sprites(camera)
 
     def draw(self):
@@ -146,7 +143,7 @@ class MainLoop(GameLoop):
             tile.fill(item.draw_color)
             camera.draw_tile(tile, item.draw(), self.flrmgr.floor.tile_size)
         
-        #self.flrmgr.floor_sprite_group.draw(camera.surf)
+        self.flrmgr.floor_sprite_group.draw(camera.surf)
         self.flrmgr.obj_sprite_group.draw(camera.surf)
         camera.draw_to_screen(self.hud.draw(), (0, 0))
 

@@ -2,9 +2,9 @@ import pygame, math
 
 class Minimap:
     def __init__(self, floormanager):
-        self.visible_player = True
-        self.flash_timer = 0
-        self.flash_duration = 15
+        self.small_player_icon = True
+        self.icon_timer = 0
+        self.icon_timer_duration = 30
         self.floormanager = floormanager
         self.unit_size = 4
         self.floor_color = (1,0,0)
@@ -16,10 +16,15 @@ class Minimap:
         self.floor_alpha = 255
 
     def update(self):
-        self.flash_timer = max(0, self.flash_timer-1)
-        if self.flash_timer == 0:
-            self.visible_player = not self.visible_player
-            self.flash_timer = self.flash_duration
+        if self.floormanager.get_player().state != 'idle':
+            self.icon_timer = self.icon_timer_duration
+            self.small_player_icon = False
+        else:
+            self.icon_timer = max(0, self.icon_timer-1)
+
+        if self.icon_timer == 0:
+            self.small_player_icon = not self.small_player_icon
+            self.icon_timer = self.icon_timer_duration
     
     def draw(self):
         surf = pygame.Surface(((self.floormanager.floor.floor_width * self.unit_size), (self.floormanager.floor.floor_height * self.unit_size)))
@@ -50,10 +55,10 @@ class Minimap:
                             #pygame.draw.rect(cell, self.item_color, pygame.Rect(1, 1, 3, 3))
 
                     unit_id = self.floormanager.get_unit_map(map_cor)
-                    if unit_id > -1 and unit_id == self.floormanager.player_id and self.visible_player:
+                    if unit_id > -1 and unit_id == self.floormanager.player_id and not self.small_player_icon:
                         pygame.draw.circle(cell, self.player_color, (pin_radius, pin_radius), pin_radius)
                         #pygame.draw.rect(cell, self.player_color, pygame.Rect(1, 1, 3, 3))
-                    elif unit_id > -1 and unit_id == self.floormanager.player_id and not self.visible_player:
+                    elif unit_id > -1 and unit_id == self.floormanager.player_id and self.small_player_icon:
                         pygame.draw.rect(cell, self.player_color, pygame.Rect(1, 1, 2, 2))
                     elif unit_id > -1 and unit_id != self.floormanager.player_id:
                         pygame.draw.circle(cell, self.unit_color, (pin_radius, pin_radius), pin_radius)

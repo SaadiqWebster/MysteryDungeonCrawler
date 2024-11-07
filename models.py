@@ -58,6 +58,34 @@ class SpriteStackModel(pygame.sprite.Sprite):
         img_angle = int(img_angle % self.total_angles)
         return self.model_angles[img_angle]
 
+
+class SingleLayerModel(SpriteStackModel):
+    def render_model(self, model_strip):
+        cut_cor = [0,0]
+        while cut_cor[1] < model_strip.get_height():
+            model_layer = pygame.Surface((self.layer_width, self.layer_height))
+            model_layer.fill((0,0,0))
+            if cut_cor[1] + self.layer_height >= model_strip.get_height():
+                model_layer.fill((100,0,0))
+                #model_layer = self.cut_image(model_strip, cut_cor, self.layer_width, self.layer_height)
+            self.model_layers.insert(0, model_layer)
+            cut_cor[1] += self.layer_height
+        
+        for angle in range(self.total_angles):
+            viewing_angle = angle * self.rotation_angle
+            base_surf = pygame.Surface((self.layer_width, self.layer_height))
+            base_surf = pygame.transform.rotate(base_surf, viewing_angle)
+            render_surf = pygame.Surface((base_surf.get_width(), base_surf.get_height() + float(((len(self.model_layers)-1) * self.layer_space)) ))
+            if not DEBUG['non-transparency']:
+                render_surf.set_colorkey((0,0,0))
+
+            for i, layer in reversed(list(enumerate(self.model_layers))):
+                rotated_layer = pygame.transform.rotate(layer, viewing_angle)
+                render_surf.blit(rotated_layer, (0, float((len(self.model_layers)-1-i) * self.layer_space)))
+
+            self.model_angles[angle] = render_surf
+
+
 class FloorTile(pygame.sprite.Sprite):
     def __init__(self, cor, model):
         pygame.sprite.Sprite.__init__(self)
@@ -74,12 +102,12 @@ class FloorTile(pygame.sprite.Sprite):
         current_cor = [self.cor[0]*tile_size, self.cor[1]*tile_size]
         current_cor[0] -= camera.camera_pos[0]
         current_cor[1] -= camera.camera_pos[1]
-        current_cor[1] -= self.model.draw_offset
         rotated_cor = camera.rotate_vector(current_cor, camera.compass)
 
         draw_cor = [0,0]
         draw_cor[0] = rotated_cor[0] - self.image.get_width() // 2
         draw_cor[1] = rotated_cor[1] - self.image.get_height() // 2
+        draw_cor[1] -= self.model.draw_offset
 
         #self.rect = self.image.get_rect(center = draw_cor)
         self.rect.x = draw_cor[0]

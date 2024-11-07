@@ -193,7 +193,7 @@ class FloorManager:
     def generate_new_floor(self):
         self.models = {
             'wallblock': _model.SpriteStackModel(pygame.image.load('models/testblock.png'), (32,32), 0),
-            'floorblock': _model.SpriteStackModel(pygame.image.load('models/testblock.png'), (32,32), 28)
+            'floorblock': _model.SingleLayerModel(pygame.image.load('models/testblock.png'), (32,32), 0)
         }
         player = self.get_player()
         player_stats = None if player is None else player.stats
@@ -237,15 +237,16 @@ class FloorManager:
         for x in range(self.floor.floor_width):
             for y in range(self.floor.floor_height):
                 cor = [x,y]
-                
-                floor_tile = _model.FloorTile(cor, models['floorblock'])
-                self.floor_sprite_group.add(floor_tile)
 
                 if self.floor.get_floor_map(cor) == 0:
                     wall_tile = _model.FloorTile(cor, models['wallblock'])
                     self.obj_sprite_group.add(wall_tile)
                     tile_number += 1
                     #print(tile_number)
+
+                if self.floor.get_floor_map(cor) == 1:
+                    floor_tile = _model.FloorTile(cor, models['floorblock'])
+                    self.floor_sprite_group.add(floor_tile)
 
     def spawn_stairs(self):
         self.stairs_cor = [0,0]
