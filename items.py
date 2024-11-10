@@ -1,6 +1,8 @@
+import pygame
 
-class Item():
+class Item(pygame.sprite.Sprite):
     def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
         self.cor = [0,0]
         self.id = 'Item'
         self.effect = ''
@@ -13,6 +15,9 @@ class Item():
         self.move_duration = 12
         self.draw_color = (0,255,255)
         self.draw_offset = [0,0]
+        self.image = pygame.Surface((32, 32))
+        self.image.fill(self.draw_color)
+        self.rect = self.image.get_rect()
 
     def set_throw_target(self, target_cor):
         self.state_timer = self.move_duration
@@ -31,9 +36,32 @@ class Item():
             self.cor = self.throw_target.copy()
             return True
 
-    def draw(self):
-        return [self.cor[0] + self.draw_offset[0], self.cor[1] + self.draw_offset[1]]
+    def get_draw_cor(self, tile_size):
+        draw_cor = [0,0]
+        draw_cor[0] = (self.cor[0] + self.draw_offset[0]) * tile_size
+        draw_cor[1] = (self.cor[1] + self.draw_offset[1]) * tile_size
+        return draw_cor
     
+    def update_image(self, tile_size, camera):
+        self.get_rect(tile_size, camera)
+    
+    def get_rect(self, tile_size, camera):
+        current_cor = self.get_draw_cor(tile_size)
+        current_cor[0] -= camera.camera_pos[0]
+        current_cor[1] -= camera.camera_pos[1]
+        rotated_cor = camera.rotate_vector(current_cor, camera.compass)
+
+        draw_cor = [0,0]
+        draw_cor[0] = rotated_cor[0] - self.image.get_width() // 2
+        draw_cor[1] = rotated_cor[1] - self.image.get_height() // 2
+
+        #self.rect = self.image.get_rect(center = draw_cor)
+        self.rect.x = draw_cor[0]
+        self.rect.y = draw_cor[1]
+        #self.rect.x -= camera.camera_pos[0]
+        #self.rect.y -= camera.camera_pos[1]
+
+
 class HealthItem(Item):
     def __init__(self):
         super().__init__()

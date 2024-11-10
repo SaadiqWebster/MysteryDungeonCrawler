@@ -1,10 +1,10 @@
 import unit as _u
 
 class Player(_u.Unit):
-    def __init__(self, spawn_cor, unit_size, stats, inventory):
-        super().__init__(spawn_cor, unit_size)
+    def __init__(self, spawn_cor, stats, inventory):
+        super().__init__(spawn_cor)
         self.id = 'Avatar'
-        self.draw_color = (0,255,0)
+        self.draw_color = (255,255,255)
         self.image.fill(self.draw_color)
 
         if inventory is not None:

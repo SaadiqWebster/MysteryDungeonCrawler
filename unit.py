@@ -1,7 +1,7 @@
 import pygame, models as _m
 
 class Unit(pygame.sprite.Sprite):
-    def __init__(self, spawn_cor, unit_size):
+    def __init__(self, spawn_cor):
         pygame.sprite.Sprite.__init__(self)
         self.id = 'Unit'
         self.state = 'idle'
@@ -10,7 +10,7 @@ class Unit(pygame.sprite.Sprite):
         self.direction = 0
         self.draw_offset = [0,0]
         self.draw_color = (255,255,255)
-        self.image = pygame.Surface((unit_size, unit_size))
+        self.image = pygame.Surface((32, 32))
         self.image.fill(self.draw_color)
         self.rect = self.image.get_rect()
         self.alpha = 255
@@ -153,10 +153,6 @@ class Unit(pygame.sprite.Sprite):
     def update_image(self, tile_size, camera):
         self.image.set_alpha(self.alpha)
         self.get_rect(tile_size, camera)
-        #draw_cor = self.get_draw_cor(tile_size)
-        #self.rect.center = (draw_cor[0] - camera.camera_pos[0], draw_cor[1] - camera.camera_pos[1])
-        #self.rect.x = draw_cor[0] - camera.camera_pos[0]
-        #self.rect.y = draw_cor[1] - camera.camera_pos[1]
     
     def get_rect(self, tile_size, camera):
         current_cor = self.get_draw_cor(tile_size)

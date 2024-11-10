@@ -10,14 +10,12 @@ DEBUG = {
 class SpriteStackModel(pygame.sprite.Sprite):
     def __init__(self, model_strip, dimensions, draw_offset=0, rotation_offset=0): # rotation in degrees
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.Surface((0,0))
-        self.rect = self.image.get_rect()
         self.model_layers = []
+        self.model_angles = {}
         self.layer_width = dimensions[0]
         self.layer_height = dimensions[1]
         self.layer_space = 1.0 # space in-between layers
         self.draw_offset = draw_offset
-        self.model_angles = {}
 
         self.total_angles = DEBUG['total angles']
         self.rotation_angle = 360 // self.total_angles 
@@ -60,31 +58,47 @@ class SpriteStackModel(pygame.sprite.Sprite):
 
 
 class SingleLayerModel(SpriteStackModel):
-    def render_model(self, model_strip):
-        cut_cor = [0,0]
-        while cut_cor[1] < model_strip.get_height():
-            model_layer = pygame.Surface((self.layer_width, self.layer_height))
-            model_layer.fill((0,0,0))
-            if cut_cor[1] + self.layer_height >= model_strip.get_height():
-                model_layer.fill((100,0,0))
-                #model_layer = self.cut_image(model_strip, cut_cor, self.layer_width, self.layer_height)
-            self.model_layers.insert(0, model_layer)
-            cut_cor[1] += self.layer_height
+    def __init__(self, image, model_height, draw_offset=0, rotation_offset=0): # rotation in degrees
+        pygame.sprite.Sprite.__init__(self)
+        self.image = image
+        self.model_angles = {}
+        self.layer_width = image.get_width()
+        self.layer_height = image.get_height()
+        self.layer_space = 1.0 # space in-between layers
+        self.model_height = model_height
+        self.draw_offset = draw_offset
+
+        self.total_angles = DEBUG['total angles']
+        self.rotation_angle = 360 // self.total_angles 
+        self.rotation_offset = (rotation_offset % 360) // self.rotation_angle
+
+        self.render_model(image)
+
+    def render_model(self, image):
+        # self.model_layers = []
+        # for i in range(self.model_height-1):
+        #     model_layer = pygame.Surface((self.layer_width, self.layer_height))
+        #     model_layer.fill((0,0,0))
+        #     self.model_layers.append(model_layer)
+        # self.model_layers.insert(0, image)
         
         for angle in range(self.total_angles):
             viewing_angle = angle * self.rotation_angle
             base_surf = pygame.Surface((self.layer_width, self.layer_height))
             base_surf = pygame.transform.rotate(base_surf, viewing_angle)
-            render_surf = pygame.Surface((base_surf.get_width(), base_surf.get_height() + float(((len(self.model_layers)-1) * self.layer_space)) ))
+            render_surf = pygame.Surface((base_surf.get_width(), base_surf.get_height() + float(((self.model_height-1) * self.layer_space)) ))
+            render_surf.fill((0,0,0))
             if not DEBUG['non-transparency']:
                 render_surf.set_colorkey((0,0,0))
 
-            for i, layer in reversed(list(enumerate(self.model_layers))):
-                rotated_layer = pygame.transform.rotate(layer, viewing_angle)
-                render_surf.blit(rotated_layer, (0, float((len(self.model_layers)-1-i) * self.layer_space)))
-
+            # for i, layer in reversed(list(enumerate(self.model_layers))):
+            #     rotated_layer = pygame.transform.rotate(layer, viewing_angle)
+            #     render_surf.blit(rotated_layer, (0, float((self.model_height-1-i) * self.layer_space)))
+            
+            rotated_layer = pygame.transform.rotate(image, viewing_angle)
+            render_surf.blit(rotated_layer, (0, float((self.model_height-1) * self.layer_space)))
+            
             self.model_angles[angle] = render_surf
-
 
 class FloorTile(pygame.sprite.Sprite):
     def __init__(self, cor, model):

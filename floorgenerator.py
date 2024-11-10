@@ -17,10 +17,10 @@ class Room:
         self.entrances = []
 
 class FloorGenerator:
-    def __init__(self, width, height):
-        self.tile_size = 32
-        self.floor_width = width
-        self.floor_height = height
+    def __init__(self):
+        self.floor_width = 1
+        self.floor_height = 1
+        self.tile_size = 1
         self.floor_map = self.generate_empty_map(0)
         self.room_map = self.generate_empty_map(-1)
         self.rooms = {}
@@ -61,6 +61,7 @@ class FloorGenerator:
     def set_floor_properties(self, properties):
         self.floor_width = properties['floor_width']
         self.floor_height = properties['floor_height']
+        self.tile_size = properties['tile_size']
         self.max_rooms = properties['max_rooms']
         self.max_room_area = properties['max_room_area']
         self.max_path_size = properties['max_path_size']

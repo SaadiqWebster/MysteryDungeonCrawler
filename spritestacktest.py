@@ -18,14 +18,17 @@ class SpriteStackTestLoop(GameLoop):
 
         testblock_model_strip = deer_model_strip = pygame.image.load('models/testblock.png')
         testblock_model = _m.SpriteStackModel(testblock_model_strip, (32, 32), 0)
-        floorblock_model = _m.SingleLayerModel(testblock_model_strip, (32, 32), 32)
+        
+        floor_image = pygame.Surface((32, 32))
+        floor_image.fill((0,0,175))
+        floortile_model = _m.SingleLayerModel(floor_image, 32, 32)
 
         camera_center = camera.get_center_position()
 
         spawn_cor = [camera_center[0], camera_center[1]-50]
         #self.sprite_group.add(_m.FloorTile(spawn_cor, testblock_model))
         spawn_cor = [camera_center[0], camera_center[1]-50]
-        self.sprite_group.add(_m.FloorTile(spawn_cor, floorblock_model))
+        self.sprite_group.add(_m.FloorTile(spawn_cor, floortile_model))
 
         # spawn_cor = [camera_center[0], camera_center[1]-50]
         # self.sprite_group.add(_m.FloorTile(spawn_cor, deer_model))

@@ -6,7 +6,7 @@ import models as _model, player as _p, enemies as _e, items as _i, traps as _t
 class FloorManager:
     def __init__(self, dungeon_name):
         self.dungeon_name = dungeon_name
-        self.floor = _fg.FloorGenerator(1,1)
+        self.floor = _fg.FloorGenerator()
         self.floor_number = 0
         self.stairs_cor = [0,0]
         self.next_object_id = 0
@@ -15,6 +15,7 @@ class FloorManager:
         self.items = {}
         self.traps = {}
         self.floor_sprite_group = pygame.sprite.LayeredUpdates()
+        self.trap_sprite_group = pygame.sprite.LayeredUpdates()
         self.obj_sprite_group = pygame.sprite.LayeredUpdates()
         self.unit_map = self.floor.generate_empty_map(-1)
         self.item_map = self.floor.generate_empty_map(-1)
@@ -28,8 +29,19 @@ class FloorManager:
         self.active_menus = []
         self.text_log = _l.TextLog()
 
-    def toggle_zoom(self, ZOOM_IN):
-        self.floor.tile_size = 32 if ZOOM_IN else 3
+        floor_image = pygame.Surface((32, 32))
+        floor_image.fill((0,0,175))
+        trap_image = pygame.Surface((32, 32))
+        trap_image.fill((0,255,0))
+        stair_image = pygame.Surface((32, 32))
+        stair_image.fill((255,0,255))
+        
+        self.models = {
+            'wallblock': _model.SpriteStackModel(pygame.image.load('models/testblock.png'), (32,32), 0),
+            'floortile': _model.SingleLayerModel(floor_image, 32, 0),
+            'trap': _model.SingleLayerModel(trap_image, 32, 0),
+            'stairs': _model.SingleLayerModel(stair_image, 32, 0)
+        }
 
     def get_unit(self, unit_id):
         return self.units.get(unit_id, None)
@@ -191,15 +203,12 @@ class FloorManager:
         self.spawn_player()
 
     def generate_new_floor(self):
-        self.models = {
-            'wallblock': _model.SpriteStackModel(pygame.image.load('models/testblock.png'), (32,32), 0),
-            'floorblock': _model.SingleLayerModel(pygame.image.load('models/testblock.png'), (32,32), 0)
-        }
         player = self.get_player()
         player_stats = None if player is None else player.stats
         player_inventory = None if player is None else player.inventory
     
         self.floor_sprite_group = pygame.sprite.LayeredUpdates()
+        self.trap_sprite_group = pygame.sprite.LayeredUpdates()
         self.obj_sprite_group = pygame.sprite.LayeredUpdates()
         self.units = {}
         self.items = {}
@@ -218,12 +227,11 @@ class FloorManager:
         self.floor.generate_floor()
         self.floor_number += 1
 
-        self.render_room(self.models)
-
+        self.render_room()
         self.spawn_stairs()
         self.spawn_player(player_stats, player_inventory)
-        self.spawn_enemy(_e.Enemy(self.floor.tile_size), self.find_empty_tile(self.floor.get_random_room()))
-        self.spawn_enemy(_e.Enemy(self.floor.tile_size), self.find_empty_tile(self.floor.get_random_room()))
+        self.spawn_enemy(_e.Enemy(), self.find_empty_tile(self.floor.get_random_room()))
+        self.spawn_enemy(_e.Enemy(), self.find_empty_tile(self.floor.get_random_room()))
         self.spawn_item(_i.HealthItem(), self.find_empty_tile(self.floor.get_random_room()))
         self.spawn_item(_i.AttackItem(), self.find_empty_tile(self.floor.get_random_room()))
         self.spawn_item(_i.ThrowItem(), self.find_empty_tile(self.floor.get_random_room()))
@@ -231,7 +239,7 @@ class FloorManager:
         self.spawn_trap(_t.HitTrap(), self.find_empty_tile(self.floor.get_random_room()))
         self.spawn_trap(_t.DebuffTrap(), self.find_empty_tile(self.floor.get_random_room()))
 
-    def render_room(self, models):
+    def render_room(self):
         tile_number = 0
 
         for x in range(self.floor.floor_width):
@@ -239,13 +247,13 @@ class FloorManager:
                 cor = [x,y]
 
                 if self.floor.get_floor_map(cor) == 0:
-                    wall_tile = _model.FloorTile(cor, models['wallblock'])
+                    wall_tile = _model.FloorTile(cor, self.models['wallblock'])
                     self.obj_sprite_group.add(wall_tile)
                     tile_number += 1
                     #print(tile_number)
 
                 if self.floor.get_floor_map(cor) == 1:
-                    floor_tile = _model.FloorTile(cor, models['floorblock'])
+                    floor_tile = _model.FloorTile(cor, self.models['floortile'])
                     self.floor_sprite_group.add(floor_tile)
 
     def spawn_stairs(self):
@@ -253,6 +261,9 @@ class FloorManager:
         room_id = self.floor.get_random_room()
         if room_id != -1:
             self.stairs_cor = self.find_empty_tile(room_id)
+
+        stair_tile = _model.FloorTile(self.stairs_cor, self.models['stairs'])
+        self.trap_sprite_group.add(stair_tile)
 
     def spawn_player(self, player_stats=None, player_inventory=None):
         room_id = self.floor.get_random_room()
@@ -263,7 +274,7 @@ class FloorManager:
                 room_id = self.floor.get_random_room()
 
         spawn_cor = self.find_empty_tile(room_id)
-        player = _p.Player(spawn_cor, self.floor.tile_size, player_stats, player_inventory)
+        player = _p.Player(spawn_cor, player_stats, player_inventory)
         self.units[self.next_object_id] = player
         self.obj_sprite_group.add(player)
         self.player_id = self.next_object_id
@@ -300,6 +311,7 @@ class FloorManager:
         if spawn_cor:
             item.cor = spawn_cor
             self.items[self.next_object_id] = item
+            self.obj_sprite_group.add(item)
             self.set_item_map(spawn_cor, self.next_object_id)
             self.next_object_id += 1
             return self.next_object_id - 1
@@ -313,6 +325,7 @@ class FloorManager:
             item = self.get_item(item_id)
             isinventoryfull = player.add_to_inventory(item)
             if not isinventoryfull:
+                item.kill()
                 self.set_item_map(cor, -1)
                 self.items.pop(item_id)
                 self.log_message(player.id + ' picked up ' + item.id + '.')
@@ -348,11 +361,13 @@ class FloorManager:
         floor_map_value = self.floor.get_floor_map(next_cor)
 
         if floor_map_value == 0 or self.isblocked(item.throw_direction, item.cor, next_cor): # if item collides with a wall
+            item.kill()
             self.items.pop(item_id)
             self.thrown_items.remove(item_id)
             self.drop_item(item, item.cor)
             self.change_turn()
         elif unit_map_value != -1: # if item collides with a unit
+            item.kill()
             self.items.pop(item_id)
             self.thrown_items.remove(item_id)
             self.use_item(item, unit_map_value)
@@ -386,6 +401,8 @@ class FloorManager:
         if trap_id != -1:
             trap = self.get_trap(trap_id)
             trap.visible = True
+            trap_tile = _model.FloorTile(trap.cor, self.models['trap'])
+            self.trap_sprite_group.add(trap_tile)
             self.log_message(unit.id + ' triggered the ' + trap.id + ' Trap!')
 
             if trap.effect == 'damage':
@@ -662,6 +679,10 @@ class FloorManager:
         for sprite in self.floor_sprite_group.sprites():
             sprite.update_image(self.floor.tile_size, camera)
             self.floor_sprite_group.change_layer(sprite, sprite.rect.center[1])
+
+        for sprite in self.trap_sprite_group.sprites():
+            sprite.update_image(self.floor.tile_size, camera)
+            self.trap_sprite_group.change_layer(sprite, sprite.rect.center[1])
 
         for sprite in self.obj_sprite_group.sprites():
             sprite.update_image(self.floor.tile_size, camera)
