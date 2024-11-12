@@ -163,6 +163,7 @@ class InputReader:
         self.keys = {}
         self.key_pressed = []
         self.key_released = []
+        self.axis_values = {}
         self.trigger_threshold = 1.0 # between 0 and 1
         self.analog_threshold = 0.1 # between 0 and 1
 
@@ -187,7 +188,7 @@ class InputReader:
             self.key_pressed.append(key)
         elif next_value == False and current_value == True:
             self.key_released.append(key)
-        
+    
     def translate_button(self, button, controller_type):
         input_map = CONTROLLER_BUTTON_MAP.get(controller_type, CONTROLLER_BUTTON_MAP["Xbox Series X Controller"])
         return input_map.get(button, button)
@@ -196,6 +197,9 @@ class InputReader:
         input_map = CONTROLLER_AXIS_MAP.get(controller_type, CONTROLLER_BUTTON_MAP["Xbox Series X Controller"])
         return input_map.get(axis, None)
 
+    def get_axis_value(self, axis):
+        return self.axis_values[axis] if axis in self.axis_values else 0
+    
     def isbuttondown(self, button):
         return self.buttons.get(button, False)
     
@@ -252,37 +256,46 @@ class InputReader:
             if trigger == 'left trigger' or trigger == 'right trigger':
                 trigger_state = True if event.value >= self.trigger_threshold else False
                 self.set_button(trigger, trigger_state)
+                self.axis_values[trigger] = event.value
                 #print(trigger, self.buttons[trigger])
 
             if trigger == 'left stick hor':
                 trigger_state = True if event.value <= -self.analog_threshold else False
                 self.set_button('left stick left', trigger_state)
+                self.axis_values['left stick left'] = event.value
                 trigger_state = True if event.value >= self.analog_threshold else False
                 self.set_button('left stick right', trigger_state)
+                self.axis_values['left stick right'] = event.value
                 # if self.buttons['left analog left']: print('left analog left')
                 # if self.buttons['left analog right']: print('left analog right') 
 
             if trigger == 'left stick vert':
                 trigger_state = True if event.value <= -self.analog_threshold else False
                 self.set_button('left stick up', trigger_state)
+                self.axis_values['left stick up'] = event.value
                 trigger_state = True if event.value >= self.analog_threshold else False
                 self.set_button('left stick down', trigger_state)
+                self.axis_values['left stick down'] = event.value
                 # if self.buttons['left analog up']: print('left analog up')
                 # if self.buttons['left analog down']: print('left analog down') 
 
             if trigger == 'right stick hor':
                 trigger_state = True if event.value <= -self.analog_threshold else False
                 self.set_button('right stick left', trigger_state)
+                self.axis_values['right stick left'] = event.value
                 trigger_state = True if event.value >= self.analog_threshold else False
                 self.set_button('right stick right', trigger_state)
+                self.axis_values['right stick right'] = event.value
                 # if self.buttons['right analog left']: print('right analog left')
                 # if self.buttons['right analog right']: print('right analog right') 
             
             if trigger == 'right stick vert':
                 trigger_state = True if event.value <= -self.analog_threshold else False
                 self.set_button('right stick up', trigger_state)
+                self.axis_values['right stick up'] = event.value
                 trigger_state = True if event.value >= self.analog_threshold else False
-                self.set_button('right stick down', trigger_state)  
+                self.set_button('right stick down', trigger_state) 
+                self.axis_values['right stick down'] = event.value
                 # if self.buttons['right analog up']: print('right analog up')
                 # if self.buttons['right analog down']: print('right analog down') 
 

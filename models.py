@@ -100,7 +100,8 @@ class SingleLayerModel(SpriteStackModel):
             
             self.model_angles[angle] = render_surf
 
-class FloorTile(pygame.sprite.Sprite):
+
+class ModelRender(pygame.sprite.Sprite):
     def __init__(self, cor, model):
         pygame.sprite.Sprite.__init__(self)
         self.cor = cor
@@ -108,12 +109,15 @@ class FloorTile(pygame.sprite.Sprite):
         self.image = self.model.get_image(0)
         self.rect = self.image.get_rect()
  
+    def get_draw_cor(self, tile_size):
+        return [self.cor[0]*tile_size, self.cor[1]*tile_size]
+    
     def update_image(self, tile_size, camera):
         self.image = self.model.get_image(camera.compass)
         self.get_rect(tile_size, camera)
     
     def get_rect(self, tile_size, camera):
-        current_cor = [self.cor[0]*tile_size, self.cor[1]*tile_size]
+        current_cor = self.get_draw_cor(tile_size)
         current_cor[0] -= camera.camera_pos[0]
         current_cor[1] -= camera.camera_pos[1]
         rotated_cor = camera.rotate_vector(current_cor, camera.compass)
@@ -123,7 +127,41 @@ class FloorTile(pygame.sprite.Sprite):
         draw_cor[1] = rotated_cor[1] - self.image.get_height() // 2
         draw_cor[1] -= self.model.draw_offset
 
-        #self.rect = self.image.get_rect(center = draw_cor)
+        #self.rect = self.image.get_rect(center=draw_cor)
+        self.rect.x = draw_cor[0]
+        self.rect.y = draw_cor[1]
+        #self.rect.x -= camera.camera_pos[0]
+        #self.rect.y -= camera.camera_pos[1]
+
+
+class ObjectRender(pygame.sprite.Sprite):
+    def __init__(self, cor, image):
+        pygame.sprite.Sprite.__init__(self)
+        self.cor = cor
+        self.image = image
+        self.rect = self.image.get_rect()
+        self.draw_offset = [0,0]
+ 
+    def get_draw_cor(self, tile_size):
+        draw_cor = [0,0]
+        draw_cor[0] = (self.cor[0] + self.draw_offset[0]) * tile_size
+        draw_cor[1] = (self.cor[1] + self.draw_offset[1]) * tile_size
+        return draw_cor
+    
+    def update_image(self, tile_size, camera):
+        self.get_rect(tile_size, camera)
+    
+    def get_rect(self, tile_size, camera):
+        current_cor = self.get_draw_cor(tile_size)
+        current_cor[0] -= camera.camera_pos[0]
+        current_cor[1] -= camera.camera_pos[1]
+        rotated_cor = camera.rotate_vector(current_cor, camera.compass)
+
+        draw_cor = [0,0]
+        draw_cor[0] = rotated_cor[0] - self.image.get_width() // 2
+        draw_cor[1] = rotated_cor[1] - self.image.get_height() // 2
+
+        #self.rect = self.image.get_rect(center=draw_cor)
         self.rect.x = draw_cor[0]
         self.rect.y = draw_cor[1]
         #self.rect.x -= camera.camera_pos[0]

@@ -1,9 +1,12 @@
 import pygame
+import models as _m
 
-class Item(pygame.sprite.Sprite):
+class Item(_m.ObjectRender):
     def __init__(self):
-        pygame.sprite.Sprite.__init__(self)
         self.cor = [0,0]
+        image = pygame.Surface((32, 32))
+        image.fill((0,255,255))
+        super().__init__(self.cor, image)
         self.id = 'Item'
         self.effect = ''
         self.value = 0
@@ -13,11 +16,6 @@ class Item(pygame.sprite.Sprite):
         self.description = 'default item with no value.'
         self.state_timer = 0 # NEED TO IMPLEMENT DELTA TIME INTO THE MOVEMENT OR THE MOVEMENT TIMER
         self.move_duration = 12
-        self.draw_color = (0,255,255)
-        self.draw_offset = [0,0]
-        self.image = pygame.Surface((32, 32))
-        self.image.fill(self.draw_color)
-        self.rect = self.image.get_rect()
 
     def set_throw_target(self, target_cor):
         self.state_timer = self.move_duration
@@ -35,31 +33,6 @@ class Item(pygame.sprite.Sprite):
             self.draw_offset = [0,0]
             self.cor = self.throw_target.copy()
             return True
-
-    def get_draw_cor(self, tile_size):
-        draw_cor = [0,0]
-        draw_cor[0] = (self.cor[0] + self.draw_offset[0]) * tile_size
-        draw_cor[1] = (self.cor[1] + self.draw_offset[1]) * tile_size
-        return draw_cor
-    
-    def update_image(self, tile_size, camera):
-        self.get_rect(tile_size, camera)
-    
-    def get_rect(self, tile_size, camera):
-        current_cor = self.get_draw_cor(tile_size)
-        current_cor[0] -= camera.camera_pos[0]
-        current_cor[1] -= camera.camera_pos[1]
-        rotated_cor = camera.rotate_vector(current_cor, camera.compass)
-
-        draw_cor = [0,0]
-        draw_cor[0] = rotated_cor[0] - self.image.get_width() // 2
-        draw_cor[1] = rotated_cor[1] - self.image.get_height() // 2
-
-        #self.rect = self.image.get_rect(center = draw_cor)
-        self.rect.x = draw_cor[0]
-        self.rect.y = draw_cor[1]
-        #self.rect.x -= camera.camera_pos[0]
-        #self.rect.y -= camera.camera_pos[1]
 
 
 class HealthItem(Item):

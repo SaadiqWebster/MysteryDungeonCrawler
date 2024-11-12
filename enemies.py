@@ -5,8 +5,8 @@ class Enemy(_u.Unit):
     def __init__(self):
         super().__init__([0,0])
         self.id = 'Enemy'
-        self.draw_color = (255,0,0)
-        self.image.fill(self.draw_color)
+        self.image.fill((255,0,0))
+        
         self.stats = {
             'hp':3,
             'max_hp':3,

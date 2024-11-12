@@ -247,13 +247,13 @@ class FloorManager:
                 cor = [x,y]
 
                 if self.floor.get_floor_map(cor) == 0:
-                    wall_tile = _model.FloorTile(cor, self.models['wallblock'])
+                    wall_tile = _model.ModelRender(cor, self.models['wallblock'])
                     self.obj_sprite_group.add(wall_tile)
                     tile_number += 1
                     #print(tile_number)
 
                 if self.floor.get_floor_map(cor) == 1:
-                    floor_tile = _model.FloorTile(cor, self.models['floortile'])
+                    floor_tile = _model.ModelRender(cor, self.models['floortile'])
                     self.floor_sprite_group.add(floor_tile)
 
     def spawn_stairs(self):
@@ -262,7 +262,7 @@ class FloorManager:
         if room_id != -1:
             self.stairs_cor = self.find_empty_tile(room_id)
 
-        stair_tile = _model.FloorTile(self.stairs_cor, self.models['stairs'])
+        stair_tile = _model.ModelRender(self.stairs_cor, self.models['stairs'])
         self.trap_sprite_group.add(stair_tile)
 
     def spawn_player(self, player_stats=None, player_inventory=None):
@@ -401,7 +401,7 @@ class FloorManager:
         if trap_id != -1:
             trap = self.get_trap(trap_id)
             trap.visible = True
-            trap_tile = _model.FloorTile(trap.cor, self.models['trap'])
+            trap_tile = _model.ModelRender(trap.cor, self.models['trap'])
             self.trap_sprite_group.add(trap_tile)
             self.log_message(unit.id + ' triggered the ' + trap.id + ' Trap!')
 
@@ -431,7 +431,7 @@ class FloorManager:
                 self.select_menu_option()
         
         elif self.isplayerturn() and player.state == 'idle' and not self.moving_units and not self.thrown_items:
-            if (input.iskeydown('left ctrl') and input.iskeydown('left alt')) or (input.isbuttondown('left trigger') and input.isbuttondown(4)):
+            if (input.iskeydown('left ctrl') and input.iskeydown('left alt')) or (input.isbuttondown('left trigger') and input.isbuttondown('right trigger')):
                 self.change_turn()
                 return
 
@@ -484,7 +484,7 @@ class FloorManager:
                 
                 if input.iskeydown('left ctrl')  or input.isbuttondown('left trigger'):
                     block_direction = True
-                elif (input.iskeydown('left alt')  or input.isbuttondown(4)) and 0 in rotated_direction:
+                elif (input.iskeydown('left alt')  or input.isbuttondown('right trigger')) and 0 in rotated_direction:
                     block_direction = True
 
                 if self.iswalkabletile(next_cor) and not block_direction:

@@ -1,18 +1,17 @@
-import pygame, models as _m
+import pygame
+import models as _m
 
-class Unit(pygame.sprite.Sprite):
+class Unit(_m.ObjectRender):
     def __init__(self, spawn_cor):
-        pygame.sprite.Sprite.__init__(self)
+        image = pygame.Surface((32, 32))
+        image.fill((255,255,255))
+        super().__init__(spawn_cor, image)
+
         self.id = 'Unit'
         self.state = 'idle'
         self.cor = spawn_cor.copy()
         self.prev_cor = spawn_cor.copy()
         self.direction = 0
-        self.draw_offset = [0,0]
-        self.draw_color = (255,255,255)
-        self.image = pygame.Surface((32, 32))
-        self.image.fill(self.draw_color)
-        self.rect = self.image.get_rect()
         self.alpha = 255
         self.hit_flash_speed = 4
         
@@ -143,30 +142,8 @@ class Unit(pygame.sprite.Sprite):
 
         if self.state == 'destroy':
             self.alpha = 255 * float(self.state_timer / self.state_durations['destroy'])
-    
-    def get_draw_cor(self, tile_size):
-        draw_cor = [0,0]
-        draw_cor[0] = (self.cor[0] + self.draw_offset[0]) * tile_size
-        draw_cor[1] = (self.cor[1] + self.draw_offset[1]) * tile_size
-        return draw_cor
 
     def update_image(self, tile_size, camera):
         self.image.set_alpha(self.alpha)
         self.get_rect(tile_size, camera)
-    
-    def get_rect(self, tile_size, camera):
-        current_cor = self.get_draw_cor(tile_size)
-        current_cor[0] -= camera.camera_pos[0]
-        current_cor[1] -= camera.camera_pos[1]
-        rotated_cor = camera.rotate_vector(current_cor, camera.compass)
-
-        draw_cor = [0,0]
-        draw_cor[0] = rotated_cor[0] - self.image.get_width() // 2
-        draw_cor[1] = rotated_cor[1] - self.image.get_height() // 2
-
-        #self.rect = self.image.get_rect(center = draw_cor)
-        self.rect.x = draw_cor[0]
-        self.rect.y = draw_cor[1]
-        #self.rect.x -= camera.camera_pos[0]
-        #self.rect.y -= camera.camera_pos[1]
     

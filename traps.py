@@ -7,7 +7,6 @@ class Trap:
         self.value = 0
         self.log_message = ''
         self.visible = False
-        self.draw_color = (255,255,255)
 
     def draw(self):
         return self.cor

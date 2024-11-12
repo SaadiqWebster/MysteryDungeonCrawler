@@ -4,8 +4,7 @@ class Player(_u.Unit):
     def __init__(self, spawn_cor, stats, inventory):
         super().__init__(spawn_cor)
         self.id = 'Avatar'
-        self.draw_color = (255,255,255)
-        self.image.fill(self.draw_color)
+        self.image.fill((255,255,255))
 
         if inventory is not None:
             self.inventory = inventory

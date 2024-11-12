@@ -63,7 +63,6 @@ class GameLoop:
         clock.tick(FPS)
 
 
-
 class MainLoop(GameLoop):
     def __init__(self):
         super().__init__()
@@ -96,12 +95,20 @@ class MainLoop(GameLoop):
         super().read_events()
 
         if input.iskeydown('a') or input.isbuttondown('right stick left'):
-            camera.turn_clockwise()
+            scale_factor = abs(input.get_axis_value('right stick left')) if input.isbuttondown('right stick left') else 1
+            camera.turn_clockwise(scale_factor)
         
         if input.iskeydown('d') or input.isbuttondown('right stick right'):
-            camera.turn_counterclockwise()
+            scale_factor = abs(input.get_axis_value('right stick right')) if input.isbuttondown('right stick right') else 1
+            camera.turn_counterclockwise(scale_factor)
         
-        if input.iskeypressed('tab') or input.isbuttonpressed(6):
+        if input.iskeypressed('q') or input.isbuttonpressed(4):
+            camera.snap_clockwise()
+
+        if input.iskeypressed('e') or input.isbuttonpressed(5):
+            camera.snap_counterclockwise()
+
+        if input.iskeypressed('tab') or input.isbuttonpressed(15):
             self.flrmgr.generate_new_floor()
             if self.DEBUG['visible_minimap']:
                 self.flrmgr.visibility_map = self.flrmgr.floor.generate_empty_map(1)
@@ -109,26 +116,12 @@ class MainLoop(GameLoop):
     def update(self):
         self.flrmgr.read_input(input, camera)
         self.flrmgr.update_objects()
-        self.hud.update()
-       
-        player = self.flrmgr.get_player()
-        camera.follow_unit(player, self.flrmgr.floor.tile_size)
-
+        camera.follow_unit(self.flrmgr.get_player(), self.flrmgr.floor.tile_size)
+        camera.update()
         self.flrmgr.update_sprites(camera)
+        self.hud.update()
 
     def draw(self):
-        # stairs_draw_color = (255,0,255)
-        # tile = pygame.Surface(((self.flrmgr.floor.tile_size, self.flrmgr.floor.tile_size)))
-        # tile.fill(stairs_draw_color)
-        # camera.draw_tile(tile, self.flrmgr.stairs_cor, self.flrmgr.floor.tile_size)
-
-        # for trap_id in self.flrmgr.traps:
-        #     trap = self.flrmgr.get_trap(trap_id)
-        #     if trap.visible or self.DEBUG['visible_traps']:
-        #         tile = pygame.Surface(((self.flrmgr.floor.tile_size, self.flrmgr.floor.tile_size)))
-        #         tile.fill(trap.draw_color)
-        #         camera.draw_tile(tile, trap.draw(), self.flrmgr.floor.tile_size)
-        
         self.flrmgr.floor_sprite_group.draw(camera.surf)
         self.flrmgr.trap_sprite_group.draw(camera.surf)
         self.flrmgr.obj_sprite_group.draw(camera.surf)

@@ -23,26 +23,27 @@ class SpriteStackTestLoop(GameLoop):
         floor_image.fill((0,0,175))
         floortile_model = _m.SingleLayerModel(floor_image, 32, 32)
 
+        camera.fill_color = (100, 100, 100)
         camera_center = camera.get_center_position()
 
         spawn_cor = [camera_center[0], camera_center[1]-50]
-        #self.sprite_group.add(_m.FloorTile(spawn_cor, testblock_model))
+        #self.sprite_group.add(_m.ModelRender(spawn_cor, testblock_model))
         spawn_cor = [camera_center[0], camera_center[1]-50]
-        self.sprite_group.add(_m.FloorTile(spawn_cor, floortile_model))
+        self.sprite_group.add(_m.ModelRender(spawn_cor, floortile_model))
 
         # spawn_cor = [camera_center[0], camera_center[1]-50]
-        # self.sprite_group.add(_m.FloorTile(spawn_cor, deer_model))
+        # self.sprite_group.add(_m.ModelRender(spawn_cor, deer_model))
         # spawn_cor = [camera_center[0]-10, camera_center[1]-60]
-        # self.sprite_group.add(_m.FloorTile(spawn_cor, deer_model))
+        # self.sprite_group.add(_m.ModelRender(spawn_cor, deer_model))
         # spawn_cor = [camera_center[0]+10, camera_center[1]-60]
-        # self.sprite_group.add(_m.FloorTile(spawn_cor, deer_model))
+        # self.sprite_group.add(_m.ModelRender(spawn_cor, deer_model))
         
         # spawn_cor = [camera_center[0], camera_center[1]+50]
-        # self.sprite_group.add(_m.FloorTile(spawn_cor, knight_model))
+        # self.sprite_group.add(_m.ModelRender(spawn_cor, knight_model))
         # spawn_cor = [camera_center[0]-10, camera_center[1]+60]
-        # self.sprite_group.add(_m.FloorTile(spawn_cor, knight_model))
+        # self.sprite_group.add(_m.ModelRender(spawn_cor, knight_model))
         # spawn_cor = [camera_center[0]+10, camera_center[1]+60]
-        # self.sprite_group.add(_m.FloorTile(spawn_cor, knight_model))
+        # self.sprite_group.add(_m.ModelRender(spawn_cor, knight_model))
 
     def start(self):
         super().start()
