@@ -6,9 +6,10 @@ class Camera():
         self.surf = pygame.Surface(self.camera_size)
         self.camera_pos = [0,0]
         self.fill_color = (0,0,0) #(3, 157, 252)
-        self.compass = round(float(math.pi/4), 7) # in radians
+        self.start_angle = round(7*float(math.pi/4), 7) # in radians
+        self.compass = self.start_angle # in radians
         self.target_compass = self.compass
-        self.snap_angle = round(float(math.pi/4), 7)
+        self.snap_angle = round(float(math.pi/4), 7) # in radians
         self.turn_speed = 0.04
         self.ease_speed = 8
 
@@ -20,6 +21,10 @@ class Camera():
 
     def set_position(self, cor):
         self.camera_pos = cor.copy()
+    
+    def set_angle(self, angle):
+        self.compass = angle
+        self.target_compass = angle
 
     def clear(self):
         self.surf.fill(self.fill_color)

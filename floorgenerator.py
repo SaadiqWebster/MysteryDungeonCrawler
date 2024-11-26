@@ -25,12 +25,12 @@ class FloorGenerator:
         self.room_map = self.generate_empty_map(-1)
         self.rooms = {}
         self.max_rooms = 0
+        self.min_room_size = [3,3]
+        self.max_room_size = [10,10]
         self.max_room_area = 0
         self.max_path_size = -1
         self.num_shortcuts = 0
         self.shortcut_threshold = 0
-        self.MIN_ROOM_SIZE = [3,3]
-        self.MAX_ROOM_SIZE = [10,10]
         self.MAX_FAILURES = 7
 
     def get_map_value(self, map, cor):
@@ -63,6 +63,8 @@ class FloorGenerator:
         self.floor_height = properties['floor_height']
         self.tile_size = properties['tile_size']
         self.max_rooms = properties['max_rooms']
+        self.min_room_size = properties['min_room_size']
+        self.max_room_size = properties['max_room_size']
         self.max_room_area = properties['max_room_area']
         self.max_path_size = properties['max_path_size']
         self.num_shortcuts = properties['num_shortcuts']
@@ -206,7 +208,7 @@ class FloorGenerator:
         room_id = 0
 
         while num_rooms < maxrooms and num_failures < self.MAX_FAILURES:
-            room = self.generate_random_room(self.MIN_ROOM_SIZE, self.MAX_ROOM_SIZE, maxroomarea)
+            room = self.generate_random_room(self.min_room_size, self.max_room_size, maxroomarea)
             if self.place_room(room, room_id):
                 num_rooms += 1
                 room_id += 1

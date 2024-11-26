@@ -34,6 +34,9 @@ class Item(_m.ObjectRender):
             self.cor = self.throw_target.copy()
             return True
 
+    def get_rect(self, tile_size, camera):
+        super().get_rect(tile_size, camera)
+        self.rect.y -= 1
 
 class HealthItem(Item):
     def __init__(self):

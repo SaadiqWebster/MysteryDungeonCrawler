@@ -4,10 +4,12 @@ import menu as _m, textlog as _l
 import models as _model, player as _p, enemies as _e, items as _i, traps as _t
 
 class FloorManager:
-    def __init__(self, dungeon_name):
+    def __init__(self, dungeon_name, sounds):
         self.dungeon_name = dungeon_name
+        self.sounds = sounds
         self.floor = _fg.FloorGenerator()
         self.floor_number = 0
+        self.to_next_floor = False
         self.stairs_cor = [0,0]
         self.next_object_id = 0
         self.player_id = -1
@@ -144,6 +146,7 @@ class FloorManager:
         unit = self.get_unit(unit_id)
         unit.hit(damage)
         self.attacked_units.append(unit_id)
+        self.sounds.play_sfx('damage_hit' + str(random.randint(1,3)) + '.wav')
     
     def check_visibility(self, cor):
             visibility_radius = 1
@@ -226,6 +229,7 @@ class FloorManager:
 
         self.floor.generate_floor()
         self.floor_number += 1
+        self.to_next_floor = False
 
         self.render_room()
         self.spawn_stairs()
@@ -350,6 +354,7 @@ class FloorManager:
         item.throw_direction = direction
         self.thrown_items.append(item_id)
         self.check_item_collision(item_id)
+        self.sounds.play_sfx('throw.wav')
 
     def check_item_collision(self, item_id):
         dir_x = [0,1,1,1,0,-1,-1,-1]
@@ -420,12 +425,15 @@ class FloorManager:
         if self.active_menus:
             if input.iskeypressed('up') or input.isbuttonpressed('left stick up') or input.isbuttonpressed(11):
                 active_menu.cursor_forward()
+                self.sounds.play_sfx('menu_cursor.wav')
             
             if input.iskeypressed('down') or input.isbuttonpressed('left stick down') or input.isbuttonpressed(12):
                 active_menu.cursor_backward()
+                self.sounds.play_sfx('menu_cursor.wav')
 
             if input.iskeypressed('x') or input.isbuttonpressed(1):
                 self.close_active_menu()
+                self.sounds.play_sfx('menu_close.wav')
 
             if input.iskeypressed('z') or input.isbuttonpressed(0):
                 self.select_menu_option()
@@ -440,10 +448,12 @@ class FloorManager:
                 if player.cor == self.stairs_cor:
                     options.insert(-1, 'Proceed')
                 self.open_menu(_m.Menu((2, 40), options))
+                self.sounds.play_sfx('menu_open.wav')
             
             if (input.iskeypressed('space') or input.isbuttonpressed(0)) and player.state == 'idle':
                 player.attack()
                 self.close_all_menus()
+                self.sounds.play_sfx('attack.wav')
 
             input_direction = [0, 0]
             if input.iskeydown('up') or input.isbuttondown('left stick up') or input.isbuttondown(11):
@@ -484,7 +494,7 @@ class FloorManager:
                 
                 if input.iskeydown('left ctrl')  or input.isbuttondown('left trigger'):
                     block_direction = True
-                elif (input.iskeydown('left alt')  or input.isbuttondown('right trigger')) and 0 in rotated_direction:
+                elif (input.iskeydown('left alt')  or input.isbuttondown('right trigger')) and 0 in input_direction:
                     block_direction = True
 
                 if self.iswalkabletile(next_cor) and not block_direction:
@@ -528,23 +538,29 @@ class FloorManager:
             
             if option == 'Exit' or option == 'Back' or option == 'Cancel':
                 self.close_active_menu()
+                self.sounds.play_sfx('menu_close.wav')
 
             if option == 'Wait':
                 self.close_active_menu()
                 player.consume_energy()
                 self.change_turn()
+                self.sounds.play_sfx('menu_select.wav')
 
             if option == 'Proceed':
                 self.close_active_menu()
-                self.generate_new_floor()
+                self.to_next_floor = True
+                self.sounds.play_sfx('menu_select.wav')
+                self.sounds.play_sfx('stairs_up.wav')
             
             if option == 'Attack':
                 player.attack()
                 self.close_all_menus()
+                self.sounds.play_sfx('menu_select.wav')
             
             if option == 'Items':
                 player_inv = player.inventory
                 self.open_menu(_m.InventoryMenu((2, 30), player_inv))
+                self.sounds.play_sfx('menu_select.wav')
 
             if option == 'Use':
                 self.close_active_menu()
@@ -552,18 +568,21 @@ class FloorManager:
                 self.use_item(inventory_menu.pop_selected(), self.player_id)
                 self.active_menus.clear()
                 self.change_turn()
+                self.sounds.play_sfx('menu_select.wav')
 
             if option == 'Equip':
                 self.close_active_menu()
                 inventory_menu = self.get_active_menu()
                 equipment = inventory_menu.get_selected()
                 player.equip_item(equipment)
+                self.sounds.play_sfx('menu_select.wav')
 
             if option == 'Unequip':
                 self.close_active_menu()
                 inventory_menu = self.get_active_menu()
                 equipment = inventory_menu.get_selected()
                 player.unequip_item(equipment)
+                self.sounds.play_sfx('menu_select.wav')
             
             if option == 'Throw':
                 self.close_active_menu()
@@ -574,6 +593,7 @@ class FloorManager:
                 selected_item.cor = player.cor.copy()
                 self.throw_item(selected_item, player.direction)
                 self.close_all_menus()
+                self.sounds.play_sfx('menu_select.wav')
 
             if option == 'Drop':
                 self.close_active_menu()
@@ -629,6 +649,7 @@ class FloorManager:
                     if unit.stats['hp'] <= 0:
                         unit.destroy()
                         self.log_message(unit.id + ' was defeated!')
+                        self.sounds.play_sfx('unit_down.wav')
                     else:
                         self.attacked_units.remove(unit_id)
 
@@ -651,6 +672,7 @@ class FloorManager:
                         self.trigger_trap(unit_id)
                         if player.cor == self.stairs_cor:
                             self.open_menu(_m.Menu((2, 40), ['Proceed','Cancel']))
+                            self.sounds.play_sfx('menu_open.wav')
 
             if self.get_player() is not None and unit_id == self.get_current_turn() and unit.state == 'idle' and not self.thrown_items:
                 self.decide_action(unit_id)
@@ -663,6 +685,8 @@ class FloorManager:
             decision_made = unit.decide_action(self.floor, self.unit_map, self.units, self.player_id)
             if not decision_made:
                 self.change_turn()
+            elif unit.state == 'attack':
+                self.sounds.play_sfx('attack.wav')
             elif unit.state == 'move':
                     self.place_unit(unit_id)
                     self.moving_units.append(unit_id)
