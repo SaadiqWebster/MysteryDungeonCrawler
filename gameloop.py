@@ -96,7 +96,7 @@ class MainLoop(GameLoop):
         #self.flrmgr.floor.print_map(flrmgr.floor.room_map)
 
         #sounds.play_music('mm8-frost-man.wav', 1000)
-        #sounds.play_music('mm8-opening.wav')
+        sounds.play_music('mm8-opening.wav')
         #sounds.play_music('azali-outer-space-carnival.wav', 3000)
 
         self.dungeon_intro = DungeonIntroduction(self.flrmgr)
@@ -105,20 +105,19 @@ class MainLoop(GameLoop):
     def read_events(self):
         super().read_events()
 
-        if self.flrmgr.get_active_menu() is None:
-            if input.iskeydown('a') or input.isbuttondown('right stick left'):
-                scale_factor = abs(input.get_axis_value('right stick left')) if input.isbuttondown('right stick left') else 1
-                camera.turn_clockwise(scale_factor)
-            
-            if input.iskeydown('d') or input.isbuttondown('right stick right'):
-                scale_factor = abs(input.get_axis_value('right stick right')) if input.isbuttondown('right stick right') else 1
-                camera.turn_counterclockwise(scale_factor)
+        if input.iskeydown('a') or input.isbuttondown('right stick left'):
+            scale_factor = abs(input.get_axis_value('right stick left')) if input.isbuttondown('right stick left') else 1
+            camera.turn_clockwise(scale_factor)
         
-            if input.iskeypressed('q') or input.isbuttonpressed(4):
-                camera.snap_clockwise()
+        if input.iskeydown('d') or input.isbuttondown('right stick right'):
+            scale_factor = abs(input.get_axis_value('right stick right')) if input.isbuttondown('right stick right') else 1
+            camera.turn_counterclockwise(scale_factor)
+    
+        if input.iskeypressed('q') or input.isbuttonpressed(4):
+            camera.snap_clockwise()
 
-            if input.iskeypressed('e') or input.isbuttonpressed(5):
-                camera.snap_counterclockwise()
+        if input.iskeypressed('e') or input.isbuttonpressed(5):
+            camera.snap_counterclockwise()
         
         if input.iskeydown('left shift') or input.isbuttonpressed(6):
             self.flrmgr.text_log.visibility = not self.flrmgr.text_log.visibility

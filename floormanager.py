@@ -336,6 +336,8 @@ class FloorManager:
                 self.set_item_map(cor, -1)
                 self.items.pop(item_id)
                 self.log_message(player.id + ' picked up ' + item.id + '.')
+            else:
+                self.log_message(player.id +'\'s inventory is full!')
 
     def drop_item(self, item, cor):
         dir_x = [0,0,1,1,1,0,-1,-1,-1]
@@ -450,6 +452,8 @@ class FloorManager:
 
             if input.iskeypressed('z') or input.isbuttonpressed(3):
                 options = ['Attack','Skills','Items','Wait','Back']
+                if self.get_item_map(player.cor) != -1:
+                    options.insert(-1, 'Pickup')
                 if player.cor == self.stairs_cor:
                     options.insert(-1, 'Proceed')
                 
@@ -579,6 +583,11 @@ class FloorManager:
                 menu_pos = [current_menu.draw_cor[0] - inventory_menu.window_width + current_menu.window_width + 5, current_menu.draw_cor[1] - (inventory_menu.window_height / 2) + (current_menu.window_height / 2)]
                 inventory_menu.set_draw_cor(menu_pos)
                 self.open_menu(inventory_menu)
+                self.sounds.play_sfx('menu_select.wav')
+
+            if option == 'Pickup':
+                self.pickup_item(player.cor)
+                self.close_all_menus()
                 self.sounds.play_sfx('menu_select.wav')
 
             if option == 'Use':
