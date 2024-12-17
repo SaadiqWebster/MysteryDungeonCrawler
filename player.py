@@ -15,14 +15,15 @@ class Player(_u.Unit):
             self.stats = stats
         else:
             self.stats = {
+                'level':1,
                 'hp':20,
                 'max_hp':20,
                 'sp':10,
                 'max_sp':10,
                 'en':100,
                 'max_en':100,
-                'atk':1,
-                'magic':1
+                'atk':5,
+                'magic':5
             }
         
         self.stat_modifiers = {
@@ -34,24 +35,28 @@ class Player(_u.Unit):
         }
 
         self.max_inventory_size = 12
-        self.energy_duration = 5
+        self.energy_duration = 7
         self.energy_timer = self.energy_duration
 
-    def update_state(self):
-        prev_state = self.state
-        end_turn = super().update_state()
-        if end_turn and prev_state == 'move':
-            self.consume_energy()
-        return end_turn
+    def hit(self, damage):
+        super().hit(damage)
+        self.energy_timer = self.energy_duration
 
     def consume_energy(self):
-        if self.stats['en'] > 0:
-            self.stats['hp'] = min(self.stats['hp']+1, self.stats['max_hp'])
-            self.stats['sp'] = min(self.stats['sp']+1, self.stats['max_sp'])
-            self.energy_timer -= 1
+        self.energy_timer -= 1
+
         if self.energy_timer <= 0:
-            self.stats['en'] = max(0, self.stats['en']-1)
             self.energy_timer = self.energy_duration
+            self.stats['en'] -= 1
+
+            if self.stats['en'] < 0:
+                self.stats['en'] = 0
+                return False
+            else:
+                self.stats['hp'] = min(self.stats['hp']+self.energy_duration, self.stats['max_hp'])
+                self.stats['sp'] = min(self.stats['sp']+1, self.stats['max_sp'])
+            
+        return True
 
     def add_to_inventory(self, item):
         if len(self.inventory) < self.max_inventory_size:

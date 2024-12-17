@@ -4,8 +4,8 @@ class SoundManager:
     def __init__(self, file_path):
         self.file_path = file_path
         self.sounds = self.load_sounds(self.file_path)
-        self.music_volume = 50 # between 0 and 100
-        self.sfx_volume = 50 # between 0 and 100
+        self.music_volume = 25 # between 0 and 100
+        self.sfx_volume = 25 # between 0 and 100
      
     def load_sounds(self, file_path):
         sounds = {}

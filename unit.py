@@ -31,9 +31,10 @@ class Unit(_m.ObjectRender):
         
         self.affinities = {
             'fire':0,
-            'water':9,
-            'ice':0,
-            'electricity':0
+            'water':0,
+            'wood':0,
+            'electricity':0,
+            'darkness':0
         }
 
         self.state_timer = 0 # NEED TO IMPLEMENT DELTA TIME INTO THE MOVEMENT OR THE MOVEMENT TIMER
@@ -89,7 +90,7 @@ class Unit(_m.ObjectRender):
         self.set_state('attack_forward')
 
     def hit(self, damage):
-        self.stats['hp'] -= damage
+        self.stats['hp'] = max(0, self.stats['hp'] - damage)
         self.set_state('hit')
 
     def destroy(self):

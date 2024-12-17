@@ -75,13 +75,13 @@ class MainLoop(GameLoop):
         }
 
         self.transition = _t.Transition(CAMERA_SIZE, 'out', 30, (0,0,0))
-        self.flrmgr = _fm.FloorManager('Terminal', sounds)
+        self.flrmgr = _fm.FloorManager('The Terminal', sounds)
         self.hud = _h.Hud(CAMERA_SIZE, self.flrmgr)
         floor_properties = { # mystery dungeon maps are around 56 x 72 units in size
             'floor_width': 30,
             'floor_height': 25,
             'tile_size': 31,
-            'max_rooms': 6,
+            'max_rooms': 5,
             'min_room_size':[5,5],
             'max_room_size':[10,10],
             'max_room_area': 35,
@@ -96,7 +96,7 @@ class MainLoop(GameLoop):
         #self.flrmgr.floor.print_map(flrmgr.floor.room_map)
 
         #sounds.play_music('mm8-frost-man.wav', 1000)
-        sounds.play_music('mm8-opening.wav')
+        #sounds.play_music('mm8-opening.wav')
         #sounds.play_music('azali-outer-space-carnival.wav', 3000)
 
         self.dungeon_intro = DungeonIntroduction(self.flrmgr)
@@ -105,22 +105,23 @@ class MainLoop(GameLoop):
     def read_events(self):
         super().read_events()
 
-        if input.iskeydown('a') or input.isbuttondown('right stick left'):
-            scale_factor = abs(input.get_axis_value('right stick left')) if input.isbuttondown('right stick left') else 1
-            camera.turn_clockwise(scale_factor)
+        if self.flrmgr.get_active_menu() is None:
+            if input.iskeydown('a') or input.isbuttondown('right stick left'):
+                scale_factor = abs(input.get_axis_value('right stick left')) if input.isbuttondown('right stick left') else 1
+                camera.turn_clockwise(scale_factor)
+            
+            if input.iskeydown('d') or input.isbuttondown('right stick right'):
+                scale_factor = abs(input.get_axis_value('right stick right')) if input.isbuttondown('right stick right') else 1
+                camera.turn_counterclockwise(scale_factor)
         
-        if input.iskeydown('d') or input.isbuttondown('right stick right'):
-            scale_factor = abs(input.get_axis_value('right stick right')) if input.isbuttondown('right stick right') else 1
-            camera.turn_counterclockwise(scale_factor)
-        
-        if input.iskeypressed('q') or input.isbuttonpressed(4):
-            camera.snap_clockwise()
+            if input.iskeypressed('q') or input.isbuttonpressed(4):
+                camera.snap_clockwise()
 
-        if input.iskeypressed('e') or input.isbuttonpressed(5):
-            camera.snap_counterclockwise()
+            if input.iskeypressed('e') or input.isbuttonpressed(5):
+                camera.snap_counterclockwise()
         
         if input.iskeydown('left shift') or input.isbuttonpressed(6):
-            self.hud.textlog_visibility = not self.hud.textlog_visibility
+            self.flrmgr.text_log.visibility = not self.flrmgr.text_log.visibility
             self.hud.minimap_visibility = not self.hud.minimap_visibility
 
         if input.iskeypressed('tab') or input.isbuttonpressed(15):
@@ -136,6 +137,7 @@ class MainLoop(GameLoop):
         self.flrmgr.update_objects()
         camera.follow_unit(self.flrmgr.get_player(), self.flrmgr.floor.tile_size)
         camera.update()
+        self.flrmgr.update_menus()
         self.flrmgr.update_sprites(camera)
         self.hud.update()
 
@@ -159,21 +161,22 @@ class MainLoop(GameLoop):
         for menu in self.flrmgr.active_menus:
             camera.draw_to_screen(menu.draw(), menu.draw_cor)
 
-        compass_needle = pygame.transform.rotate(pygame.image.load('sprites/compass_needle.png'), -math.degrees(camera.compass))
-        compass_circle = pygame.image.load('sprites/compass_circle.png')
-        compass_directions = pygame.image.load('sprites/compass_directions.png')
-        draw_pos = [CAMERA_SIZE[0]-28, 27]
-        draw_pos[0] -= compass_directions.get_width()//2
-        draw_pos[1] -= compass_directions.get_height()//2
-        camera.draw_to_screen(compass_directions, draw_pos)
-        draw_pos = [CAMERA_SIZE[0]-28, 27]
-        draw_pos[0] -= compass_circle.get_width()//2
-        draw_pos[1] -= compass_circle.get_height()//2
-        camera.draw_to_screen(compass_circle, draw_pos)
-        draw_pos = [CAMERA_SIZE[0]-28, 27]
-        draw_pos[0] -= compass_needle.get_width()//2
-        draw_pos[1] -= compass_needle.get_height()//2
-        camera.draw_to_screen(compass_needle, draw_pos)
+        # --- code to display compass onto the screen
+        # compass_needle = pygame.transform.rotate(pygame.image.load('sprites/compass_needle.png'), -math.degrees(camera.compass))
+        # compass_circle = pygame.image.load('sprites/compass_circle.png')
+        # compass_directions = pygame.image.load('sprites/compass_directions.png')
+        # draw_pos = [CAMERA_SIZE[0]-28, 27]
+        # draw_pos[0] -= compass_directions.get_width()//2
+        # draw_pos[1] -= compass_directions.get_height()//2
+        # camera.draw_to_screen(compass_directions, draw_pos)
+        # draw_pos = [CAMERA_SIZE[0]-28, 27]
+        # draw_pos[0] -= compass_circle.get_width()//2
+        # draw_pos[1] -= compass_circle.get_height()//2
+        # camera.draw_to_screen(compass_circle, draw_pos)
+        # draw_pos = [CAMERA_SIZE[0]-28, 27]
+        # draw_pos[0] -= compass_needle.get_width()//2
+        # draw_pos[1] -= compass_needle.get_height()//2
+        # camera.draw_to_screen(compass_needle, draw_pos)
 
         camera.draw_to_screen(self.transition.draw(), (0, 0))
 

@@ -8,8 +8,8 @@ class Enemy(_u.Unit):
         self.image.fill((255,0,0))
         
         self.stats = {
-            'hp':3,
-            'max_hp':3,
+            'hp':5,
+            'max_hp':5,
             'atk':1,
             'mgc':1
         }
@@ -60,3 +60,30 @@ class Enemy(_u.Unit):
                 return True
             else:
                 return False
+
+
+class PhysicalEnemy(Enemy):
+    def __init__(self):
+        super().__init__()
+        self.id = 'Enemy'
+        self.image.fill((255,0,0))
+        
+        self.stats = {
+            'hp':10,
+            'max_hp':10,
+            'atk':5,
+            'mgc':1
+        }
+
+class MagicalEnemy(Enemy):
+    def __init__(self):
+        super().__init__()
+        self.id = 'Enemy'
+        self.image.fill((0,0,255))
+        
+        self.stats = {
+            'hp':7,
+            'max_hp':7,
+            'atk':1,
+            'mgc':5
+        }

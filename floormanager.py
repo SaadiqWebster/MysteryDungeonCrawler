@@ -75,8 +75,10 @@ class FloorManager:
         return self.turn_order[self.current_turn]
     
     def get_active_menu(self):
-        if self.active_menus:
-            return self.active_menus[-1]
+        for menu in reversed(self.active_menus):
+            if menu.is_open():
+                return menu
+        return None
     
     def set_floor_properties(self, properties):
         self.floor.set_floor_properties(properties)
@@ -187,10 +189,11 @@ class FloorManager:
         self.active_menus.append(menu)
 
     def close_active_menu(self):
-        self.active_menus.pop(-1)
+        self.active_menus[-1].close()
 
     def close_all_menus(self):
-        self.active_menus.clear()
+        for menu in self.active_menus:
+            menu.close()
 
     def generate_sprite(self, color, spawn_cor):
         sprite = pygame.sprite.Sprite()
@@ -234,8 +237,8 @@ class FloorManager:
         self.render_room()
         self.spawn_stairs()
         self.spawn_player(player_stats, player_inventory)
-        self.spawn_enemy(_e.Enemy(), self.find_empty_tile(self.floor.get_random_room()))
-        self.spawn_enemy(_e.Enemy(), self.find_empty_tile(self.floor.get_random_room()))
+        self.spawn_enemy(_e.PhysicalEnemy(), self.find_empty_tile(self.floor.get_random_room()))
+        self.spawn_enemy(_e.MagicalEnemy(), self.find_empty_tile(self.floor.get_random_room()))
         self.spawn_item(_i.HealthItem(), self.find_empty_tile(self.floor.get_random_room()))
         self.spawn_item(_i.AttackItem(), self.find_empty_tile(self.floor.get_random_room()))
         self.spawn_item(_i.ThrowItem(), self.find_empty_tile(self.floor.get_random_room()))
@@ -422,14 +425,16 @@ class FloorManager:
         player = self.get_player()
         active_menu = self.get_active_menu()
 
-        if self.active_menus:
+        if active_menu is not None:
             if input.iskeypressed('up') or input.isbuttonpressed('left stick up') or input.isbuttonpressed(11):
                 active_menu.cursor_forward()
-                self.sounds.play_sfx('menu_cursor.wav')
+                if len(active_menu.options) > 1:
+                    self.sounds.play_sfx('menu_cursor.wav')
             
             if input.iskeypressed('down') or input.isbuttonpressed('left stick down') or input.isbuttonpressed(12):
                 active_menu.cursor_backward()
-                self.sounds.play_sfx('menu_cursor.wav')
+                if len(active_menu.options) > 1:
+                    self.sounds.play_sfx('menu_cursor.wav')
 
             if input.iskeypressed('x') or input.isbuttonpressed(1):
                 self.close_active_menu()
@@ -444,10 +449,15 @@ class FloorManager:
                 return
 
             if input.iskeypressed('z') or input.isbuttonpressed(3):
-                options = ['Attack','Skills','Items','Wait','Exit']
+                options = ['Attack','Skills','Items','Wait','Back']
                 if player.cor == self.stairs_cor:
                     options.insert(-1, 'Proceed')
-                self.open_menu(_m.Menu((2, 40), options))
+                
+                actions_menu = _m.Menu(options)
+                menu_pos = [player.rect.x - actions_menu.window_width - 25, 
+                            player.rect.y - (actions_menu.window_height / 2) + (player.image.get_height() / 2)]
+                actions_menu.set_draw_cor(menu_pos)
+                self.open_menu(actions_menu)
                 self.sounds.play_sfx('menu_open.wav')
             
             if (input.iskeypressed('space') or input.isbuttonpressed(0)) and player.state == 'idle':
@@ -531,12 +541,17 @@ class FloorManager:
             menu_options.append('Back')
             
             if menu_options:
-                self.open_menu(_m.Menu((104, 30), menu_options))
+                actions_menu = _m.Menu(menu_options)
+                current_menu = self.get_active_menu()
+                menu_pos = [current_menu.draw_cor[0] + current_menu.window_width + 1, current_menu.draw_cor[1]]
+                actions_menu.set_draw_cor(menu_pos)
+                self.open_menu(actions_menu)
+                self.sounds.play_sfx('menu_select.wav')
 
         elif active_menu.id == 'menu':
             option = active_menu.get_option()
             
-            if option == 'Exit' or option == 'Back' or option == 'Cancel':
+            if option == 'Back' or option == 'Cancel':
                 self.close_active_menu()
                 self.sounds.play_sfx('menu_close.wav')
 
@@ -559,14 +574,18 @@ class FloorManager:
             
             if option == 'Items':
                 player_inv = player.inventory
-                self.open_menu(_m.InventoryMenu((2, 30), player_inv))
+                inventory_menu = _m.InventoryMenu(player_inv)
+                current_menu = self.get_active_menu()
+                menu_pos = [current_menu.draw_cor[0] - inventory_menu.window_width + current_menu.window_width + 5, current_menu.draw_cor[1] - (inventory_menu.window_height / 2) + (current_menu.window_height / 2)]
+                inventory_menu.set_draw_cor(menu_pos)
+                self.open_menu(inventory_menu)
                 self.sounds.play_sfx('menu_select.wav')
 
             if option == 'Use':
                 self.close_active_menu()
                 inventory_menu = self.get_active_menu()
                 self.use_item(inventory_menu.pop_selected(), self.player_id)
-                self.active_menus.clear()
+                self.close_all_menus()
                 self.change_turn()
                 self.sounds.play_sfx('menu_select.wav')
 
@@ -627,7 +646,7 @@ class FloorManager:
             unit = self.get_unit(unit_id)
             prev_state = unit.state
             end_turn = False
-            if not (unit.state == 'attack_forward' and (self.active_menus or self.moving_units or self.attacked_units or self.thrown_items)) and not (unit.state == 'move' and (self.active_menus or self.attacked_units or self.thrown_items)):
+            if self.to_next_floor == False and not (unit.state == 'attack_forward' and (self.active_menus or self.moving_units or self.attacked_units or self.thrown_items)) and not (unit.state == 'move' and (self.active_menus or self.attacked_units or self.thrown_items)):
                 end_turn = unit.update_state()
             if end_turn:
                 if prev_state == 'attack_forward':
@@ -670,9 +689,19 @@ class FloorManager:
                         player = self.get_player()
                         self.pickup_item(player.cor)
                         self.trigger_trap(unit_id)
+                        
                         if player.cor == self.stairs_cor:
-                            self.open_menu(_m.Menu((2, 40), ['Proceed','Cancel']))
+                            proceed_menu = _m.Menu(['Proceed','Cancel'])
+                            menu_pos = [player.rect.x - proceed_menu.window_width - 25, 
+                                        player.rect.y - (proceed_menu.window_height / 2)]
+                            proceed_menu.set_draw_cor(menu_pos)
+                            self.open_menu(proceed_menu)
                             self.sounds.play_sfx('menu_open.wav')
+                        
+                        energy_left = player.consume_energy()
+                        if not energy_left:
+                            self.hit_unit(self.player_id, 1)
+                            self.log_message(player.id + ' suffered damage from lack of energy.')
 
             if self.get_player() is not None and unit_id == self.get_current_turn() and unit.state == 'idle' and not self.thrown_items:
                 self.decide_action(unit_id)
@@ -712,5 +741,10 @@ class FloorManager:
             sprite.update_image(self.floor.tile_size, camera)
             self.obj_sprite_group.change_layer(sprite, sprite.rect.center[1])
 
-
+    def update_menus(self):
+        # make this so you can iterate though whole list and remove in the middle without error
+        for i, menu in enumerate(self.active_menus):
+            menu.update_animation()
+            if menu.is_closed():
+                self.active_menus.pop(i)
             
