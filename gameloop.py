@@ -96,7 +96,7 @@ class MainLoop(GameLoop):
         #self.flrmgr.floor.print_map(flrmgr.floor.room_map)
 
         #sounds.play_music('mm8-frost-man.wav', 1000)
-        sounds.play_music('mm8-opening.wav')
+        #sounds.play_music('mm8-opening.wav')
         #sounds.play_music('azali-outer-space-carnival.wav', 3000)
 
         self.dungeon_intro = DungeonIntroduction(self.flrmgr)
@@ -121,7 +121,7 @@ class MainLoop(GameLoop):
         
         if input.iskeydown('left shift') or input.isbuttonpressed(6):
             self.flrmgr.text_log.visibility = not self.flrmgr.text_log.visibility
-            self.hud.minimap_visibility = not self.hud.minimap_visibility
+            #self.hud.minimap_visibility = not self.hud.minimap_visibility
 
         if input.iskeypressed('tab') or input.isbuttonpressed(15):
             self.flrmgr.to_next_floor = True
@@ -137,6 +137,7 @@ class MainLoop(GameLoop):
         camera.follow_unit(self.flrmgr.get_player(), self.flrmgr.floor.tile_size)
         camera.update()
         self.flrmgr.update_menus()
+        self.flrmgr.update_textlog()
         self.flrmgr.update_sprites(camera)
         self.hud.update()
 

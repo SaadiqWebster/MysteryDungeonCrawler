@@ -16,12 +16,12 @@ class Menu():
             longest_length = max(longest_length, text_width)
 
         self.draw_cor = [0,0]
-        self.window_width = 5 + (self.hor_padding * 2) + longest_length
-        self.window_height = 5 + (self.ver_padding * 2) + (self.text_height * len(options)) + (self.line_spacing * (len(options)-1))
+        self.window_width = 3 + (self.hor_padding * 2) + longest_length
+        self.window_height = 4 + (self.ver_padding * 2) + (self.text_height * len(options)) + (self.line_spacing * (len(options)-1))
         self.options = options
         self.select = 0
         self.animation_state = 'open'
-        self.animation_duration = 3
+        self.animation_duration = 6
         self.animation_timer = self.animation_duration
 
     def set_draw_cor(self, draw_cor):
@@ -57,25 +57,26 @@ class Menu():
         surf.fill((0,0,0))
         surf.set_colorkey((0,0,0))
 
-        border_width = (self.window_width-1) * (self.animation_timer / self.animation_duration)
-        border_height = (self.window_height-1) * (self.animation_timer / self.animation_duration)
+        highlight_height = self.text_height + 3
+        border_width = self.window_width * (self.animation_timer / self.animation_duration)
+        border_height = self.window_height * (self.animation_timer / self.animation_duration)
         if self.animation_state == 'open':
-            border_width = (self.window_width-1) - border_width
-            border_height = (self.window_height-1) - border_height
+            border_width = self.window_width - border_width
+            border_height = self.window_height - border_height
 
+        window_shadow = pygame.Rect(1, 1, border_width, border_height)
         menu_border = pygame.Rect(0, 0, border_width, border_height)
-        border_shadow = pygame.Rect(1, 1, border_width, border_height)
-        pygame.draw.rect(surf, (1,0,0), border_shadow)
+        pygame.draw.rect(surf, (1,0,0), window_shadow)
         pygame.draw.rect(surf, (255,255,255), menu_border, 1)
 
         if self.is_open():
-            x_offset = 2 + self.hor_padding
-            y_offset = 2 + self.ver_padding
+            x_offset = 1 + self.hor_padding
+            y_offset = 1 + self.ver_padding
             for i in range(len(self.options)):
                 text_color = (255, 255, 255)
                 if i == self.select:
                     text_color = (1, 0, 0)
-                    highlight = pygame.Surface((self.window_width - 4 - (self.hor_padding * 2), self.text_height+2))
+                    highlight = pygame.Surface((self.window_width - 2 - (self.hor_padding * 2), highlight_height))
                     highlight.fill((255, 255, 255))
                     surf.blit(highlight, (x_offset, y_offset))
 
@@ -107,15 +108,15 @@ class InventoryMenu(Menu):
         surf.fill((0,0,0))
         surf.set_colorkey((0,0,0))
 
-        border_width = (self.window_width-1) * (self.animation_timer / self.animation_duration)
-        border_height = (self.window_height-1) * (self.animation_timer / self.animation_duration)
+        border_width = self.window_width * (self.animation_timer / self.animation_duration)
+        border_height = self.window_height * (self.animation_timer / self.animation_duration)
         if self.animation_state == 'open':
-            border_width = (self.window_width-1) - border_width
-            border_height = (self.window_height-1) - border_height
+            border_width = self.window_width - border_width
+            border_height = self.window_height - border_height
 
+        window_shadow = pygame.Rect(1, 1, border_width, border_height)
         menu_border = pygame.Rect(0, 0, border_width, border_height)
-        border_shadow = pygame.Rect(1, 1, border_width, border_height)
-        pygame.draw.rect(surf, (1,0,0), border_shadow)
+        pygame.draw.rect(surf, (1,0,0), window_shadow)
         pygame.draw.rect(surf, (255,255,255), menu_border, 1)
 
         if self.is_open():

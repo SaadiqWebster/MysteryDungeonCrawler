@@ -45,16 +45,18 @@ class Player(_u.Unit):
     def consume_energy(self):
         self.energy_timer -= 1
 
+        if self.stats['en'] > 0:
+            self.stats['hp'] = min(self.stats['hp'] + 1, self.stats['max_hp'])
+
         if self.energy_timer <= 0:
             self.energy_timer = self.energy_duration
             self.stats['en'] -= 1
 
-            if self.stats['en'] < 0:
+            if self.stats['en'] > 0:
+                self.stats['sp'] = min(self.stats['sp'] + 1, self.stats['max_sp'])
+            else:
                 self.stats['en'] = 0
                 return False
-            else:
-                self.stats['hp'] = min(self.stats['hp']+self.energy_duration, self.stats['max_hp'])
-                self.stats['sp'] = min(self.stats['sp']+1, self.stats['max_sp'])
             
         return True
 

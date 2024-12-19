@@ -550,7 +550,7 @@ class FloorManager:
                 menu_pos = [current_menu.draw_cor[0] + current_menu.window_width + 1, current_menu.draw_cor[1]]
                 actions_menu.set_draw_cor(menu_pos)
                 self.open_menu(actions_menu)
-                self.sounds.play_sfx('menu_select.wav')
+                self.sounds.play_sfx('menu_open.wav')
 
         elif active_menu.id == 'menu':
             option = active_menu.get_option()
@@ -583,7 +583,7 @@ class FloorManager:
                 menu_pos = [current_menu.draw_cor[0] - inventory_menu.window_width + current_menu.window_width + 5, current_menu.draw_cor[1] - (inventory_menu.window_height / 2) + (current_menu.window_height / 2)]
                 inventory_menu.set_draw_cor(menu_pos)
                 self.open_menu(inventory_menu)
-                self.sounds.play_sfx('menu_select.wav')
+                self.sounds.play_sfx('menu_open.wav')
 
             if option == 'Pickup':
                 self.pickup_item(player.cor)
@@ -756,4 +756,8 @@ class FloorManager:
             menu.update_animation()
             if menu.is_closed():
                 self.active_menus.pop(i)
-            
+    
+    def update_textlog(self):
+        self.text_log.update()
+
+        
